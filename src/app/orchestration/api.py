@@ -11,6 +11,7 @@ from app.orchestration.observability import (
     workflow_summary,
     workflow_timeline,
 )
+from app.orchestration.scenarios import ScenarioRunner
 from app.orchestration.schemas import (
     ApprovalDecisionRequest,
     ApprovalResponse,
@@ -20,6 +21,8 @@ from app.orchestration.schemas import (
     OrchestrationMetricsResponse,
     ReviseRequirementRequest,
     RunWorkflowResponse,
+    ScenarioResponse,
+    ScenarioRunResponse,
     WorkflowGraphResponse,
     WorkflowNodeResponse,
     WorkflowResponse,
@@ -28,10 +31,15 @@ from app.orchestration.schemas import (
 
 router = APIRouter(prefix="/api/v1/workflows", tags=["workflows"])
 metrics_router = APIRouter(prefix="/api/v1/orchestration", tags=["orchestration"])
+scenarios_router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
 
 
 def get_engine(session: Session = Depends(get_db_session)) -> WorkflowEngine:
     return WorkflowEngine(session)
+
+
+def get_scenario_runner(session: Session = Depends(get_db_session)) -> ScenarioRunner:
+    return ScenarioRunner(session)
 
 
 def to_workflow_response(workflow: Workflow) -> WorkflowResponse:
@@ -245,3 +253,16 @@ def get_orchestration_metrics(
     session: Session = Depends(get_db_session),
 ) -> OrchestrationMetricsResponse:
     return OrchestrationMetricsResponse.model_validate(orchestration_metrics(session))
+
+
+@scenarios_router.get("", response_model=list[ScenarioResponse])
+def list_scenarios(runner: ScenarioRunner = Depends(get_scenario_runner)) -> list[ScenarioResponse]:
+    return [ScenarioResponse.model_validate(item) for item in runner.available()]
+
+
+@scenarios_router.post("/{scenario_name}/run", response_model=ScenarioRunResponse)
+def run_scenario(
+    scenario_name: str, runner: ScenarioRunner = Depends(get_scenario_runner)
+) -> ScenarioRunResponse:
+    workflow = runner.run(scenario_name)
+    return ScenarioRunResponse(scenario=scenario_name, workflow=to_workflow_response(workflow))

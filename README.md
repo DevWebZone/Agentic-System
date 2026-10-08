@@ -2,9 +2,9 @@
 
 A runnable prototype for an agentic software-engineering system built around a URL shortener.
 
-## Current phase
+## What is implemented
 
-The repository contains the Phase 1 foundation and the **Phase 2 URL-shortener core**:
+The repository contains a runnable URL shortener and a governed agentic SDLC orchestration prototype:
 
 - FastAPI application skeleton
 - environment-based configuration
@@ -18,11 +18,20 @@ The repository contains the Phase 1 foundation and the **Phase 2 URL-shortener c
 - create, inspect, update, disable, redirect, and analytics APIs
 - collision-safe generated codes and validated custom aliases
 - expiration and disabled-link handling
+- explicit persisted workflow dependency graphs
+- sequential and wave-based parallel execution with synchronization
+- deterministic lifecycle agents and optional LLM requirements analysis
+- entry/exit gates, policy checks, human approvals, clarification pauses, retries, fallback, safe-stop, and rollback
+- requirement revision with selective downstream invalidation and renewed approvals
+- audit timeline, final engineering summary, and reliability metrics
+- greenfield, brownfield, and ambiguous scenarios
 
-The initial architecture decision is recorded in
-`docs\adr\0001-modular-monolith-and-persistent-workflow-foundation.md`.
+Read the reviewer-facing documents:
 
-URL-shortener domain behavior and agentic workflow functionality are intentionally added in later phases.
+- `docs\architecture.md`
+- `docs\scenarios.md`
+- `docs\limitations.md`
+- `docs\adr\0001-modular-monolith-and-persistent-workflow-foundation.md`
 
 ## Prerequisites
 
@@ -40,6 +49,14 @@ python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 alembic upgrade head
 ```
+
+To enable the optional OpenAI-backed requirements agent:
+
+```powershell
+python -m pip install -e ".[dev,llm]"
+```
+
+Then set `LLM_REQUIREMENTS_ENABLED=true` and `OPENAI_API_KEY` in `.env`. Without these values, the system uses deterministic local agents and remains fully runnable.
 
 ## Run locally
 
@@ -74,11 +91,56 @@ Example create request:
 }
 ```
 
+## Workflow orchestration API
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/v1/workflows` | Create a persisted, validated workflow graph. |
+| `POST` | `/api/v1/workflows/{id}/run` | Execute all ready workflow waves until a terminal or governance gate state. |
+| `POST` | `/api/v1/workflows/{id}/resume` | Resume interrupted persisted execution. |
+| `GET` | `/api/v1/workflows/{id}/graph` | Inspect nodes and dependency edges. |
+| `GET` | `/api/v1/workflows/{id}/timeline` | Inspect chronological lifecycle events. |
+| `GET` | `/api/v1/workflows/{id}/audit` | Inspect audit-grade event history. |
+| `GET` | `/api/v1/workflows/{id}/summary` | Retrieve the final engineering summary. |
+| `GET` | `/api/v1/workflows/{id}/approvals` | Inspect human approval records. |
+| `POST` | `/api/v1/workflows/{id}/clarifications` | Respond to `WAITING_FOR_INPUT`. |
+| `POST` | `/api/v1/workflows/{id}/requirements/revise` | Revise requirements and selectively replan. |
+| `GET` | `/api/v1/orchestration/metrics` | Retrieve workflow reliability metrics. |
+
+## Scenario API and commands
+
+```powershell
+python scripts/run_scenario.py greenfield
+python scripts/run_scenario.py brownfield
+python scripts/run_scenario.py ambiguous
+```
+
+Equivalent API endpoints:
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/scenarios` | List scenario definitions. |
+| `POST` | `/api/v1/scenarios/{name}/run` | Run `greenfield`, `brownfield`, or `ambiguous`. |
+
+Scenario review outputs are saved to `docs\scenario-runs\`.
+
 ## Validation commands
 
 ```powershell
 pytest
 ruff check .
+```
+
+Inspect local workflow state:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-state.ps1 -RunTests -RunLint
+```
+
+Run the disposable clean-database smoke test:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 ```
 
 ## Configuration

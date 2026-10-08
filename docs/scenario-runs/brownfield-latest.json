@@ -1,0 +1,186 @@
+{
+  "scenario": "brownfield",
+  "workflow_id": 1,
+  "status": "COMPLETED",
+  "artifacts": [
+    {
+      "node_key": "requirements",
+      "artifact_type": "requirements_analysis",
+      "summary": "Normalized the engineering requirement and identified clarification needs.",
+      "content": {
+        "normalized_requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "ambiguities": [],
+        "clarification_questions": [],
+        "acceptance_criteria": [
+          "The requirement is represented by reviewable engineering artifacts.",
+          "Required validation and governance gates are recorded before release readiness."
+        ],
+        "assumptions": [
+          "Existing URL-shortener API compatibility remains required unless approved otherwise."
+        ],
+        "risks": [],
+        "execution": {
+          "source": "deterministic"
+        }
+      },
+      "context_version": 2
+    },
+    {
+      "node_key": "impact-analysis",
+      "artifact_type": "architecture_overview",
+      "summary": "Produced a architecture_overview for 'impact-analysis'.",
+      "content": {
+        "stage": "architecture",
+        "model_route": "Sol",
+        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "dependency_nodes": [
+          "requirements"
+        ],
+        "output": {
+          "components": [
+            "API",
+            "service layer",
+            "repository",
+            "database"
+          ],
+          "decisions": [
+            "Preserve modular boundaries and migration-controlled persistence."
+          ]
+        }
+      },
+      "context_version": 3
+    },
+    {
+      "node_key": "implementation",
+      "artifact_type": "implementation_plan",
+      "summary": "Produced a implementation_plan for 'implementation'.",
+      "content": {
+        "stage": "implementation",
+        "model_route": "Terra",
+        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "dependency_nodes": [
+          "impact-analysis"
+        ],
+        "output": {
+          "impacted_areas": [
+            "src/app",
+            "tests"
+          ],
+          "change_controls": [
+            "Use an approved patch and run focused tests."
+          ]
+        }
+      },
+      "context_version": 4
+    },
+    {
+      "node_key": "testing",
+      "artifact_type": "test_plan",
+      "summary": "Produced a test_plan for 'testing'.",
+      "content": {
+        "stage": "testing",
+        "model_route": "Luna",
+        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "dependency_nodes": [
+          "implementation"
+        ],
+        "output": {
+          "tests": [
+            "unit",
+            "integration",
+            "regression"
+          ],
+          "acceptance": [
+            "Required tests must pass before release."
+          ]
+        }
+      },
+      "context_version": 5
+    },
+    {
+      "node_key": "validation",
+      "artifact_type": "validation_report",
+      "summary": "Produced a validation_report for 'validation'.",
+      "content": {
+        "stage": "validation",
+        "model_route": "Luna",
+        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "dependency_nodes": [
+          "testing"
+        ],
+        "output": {
+          "checks": [
+            "tests",
+            "lint",
+            "policy gates"
+          ],
+          "release_rule": [
+            "Block release when required validation fails."
+          ],
+          "validation_passed": true
+        }
+      },
+      "context_version": 6
+    },
+    {
+      "node_key": "scenario",
+      "artifact_type": "scenario_definition",
+      "summary": "Applies and validates a reviewed real patch in an isolated Git worktree.",
+      "content": {
+        "name": "brownfield",
+        "label": "runnable_scenario"
+      },
+      "context_version": 6
+    },
+    {
+      "node_key": "brownfield-patch",
+      "artifact_type": "patch_execution_report",
+      "summary": "Applied, tested, and isolated a real brownfield reliability patch.",
+      "content": {
+        "baseline_commit": "9966dcc",
+        "worktree_isolated": true,
+        "forced_failure_rolled_back": true,
+        "forced_failure_output": ".....F                                                                   [100%]\n================================== FAILURES ===================================\n________________ test_forced_brownfield_rollback_demonstration ________________\n\n    def test_forced_brownfield_rollback_demonstration() -> None:\n>       assert False, 'intentional rollback demonstration'\nE       AssertionError: intentional rollback demonstration\nE       assert False\n\ntests\\test_shortener_api.py:113: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_shortener_api.py::test_forced_brownfield_rollback_demonstration\n",
+        "valid_patch_tests_passed": true,
+        "valid_patch_test_output": "......                                                                   [100%]\n",
+        "patch_diff": "diff --git a/src/app/shortener/api.py b/src/app/shortener/api.py\nindex f24a615..337f14f 100644\n--- a/src/app/shortener/api.py\n+++ b/src/app/shortener/api.py\n@@ -93,12 +93,12 @@ def redirect_link(\n     service: LinkService = Depends(get_link_service),\n ) -> RedirectResponse:\n     link = service.resolve_redirect(short_code)\n-    try:\n-        service.record_click(\n-            link, request.headers.get(\"referer\"), request.headers.get(\"user-agent\")\n-        )\n-    except Exception:\n-        logger.exception(\n-            \"analytics_recording_failed\", extra={\"request_id\": request.state.request_id}\n+    analytics_recorded = service.record_click_safely(\n+        link, request.headers.get(\"referer\"), request.headers.get(\"user-agent\")\n+    )\n+    if not analytics_recorded:\n+        logger.warning(\n+            \"redirect_completed_without_analytics\",\n+            extra={\"request_id\": request.state.request_id},\n         )\n     return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)\ndiff --git a/src/app/shortener/service.py b/src/app/shortener/service.py\nindex 83923d4..42e8191 100644\n--- a/src/app/shortener/service.py\n+++ b/src/app/shortener/service.py\n@@ -1,5 +1,7 @@\n from datetime import UTC, datetime\n \n+import logging\n+\n from fastapi import HTTPException, status\n from sqlalchemy.exc import IntegrityError\n \n@@ -10,6 +12,7 @@ from app.shortener.schemas import CreateLinkRequest, UpdateLinkRequest\n from app.shortener.validation import require_future_expiration\n \n MAX_CODE_GENERATION_ATTEMPTS = 5\n+logger = logging.getLogger(__name__)\n \n \n class LinkService:\n@@ -76,6 +79,22 @@ class LinkService:\n         self.repository.add_click_event(link, referrer, user_agent)\n         self.repository.session.commit()\n \n+    def record_click_safely(\n+        self,\n+        link: Link,\n+        referrer: str | None,\n+        user_agent: str | None,\n+    ) -> bool:\n+        \"\"\"Protect redirects when analytics persistence has transient failures.\"\"\"\n+\n+        try:\n+            self.record_click(link, referrer, user_agent)\n+            return True\n+        except Exception:\n+            self.repository.session.rollback()\n+            logger.exception(\"analytics_recording_failed\")\n+            return False\n+\n     def get_analytics(self, short_code: str) -> tuple[Link, int, list[tuple[str, int]]]:\n         link = self.get_link(short_code)\n         total_clicks = self.repository.click_count(link.id)\ndiff --git a/tests/test_shortener_api.py b/tests/test_shortener_api.py\nindex 113ba07..52f8620 100644\n--- a/tests/test_shortener_api.py\n+++ b/tests/test_shortener_api.py\n@@ -5,6 +5,7 @@ from sqlalchemy import delete\n \n from app.core.database import SessionLocal\n from app.shortener.models import ClickEvent, Link\n+from app.shortener.service import LinkService\n \n \n def clear_shortener_data() -> None:\n@@ -107,3 +108,24 @@ def test_invalid_destination_and_past_expiration_are_rejected(client: TestClient\n         \"/api/v1/links\", json={\"original_url\": \"https://example.com\", \"expires_at\": past}\n     )\n     assert response.status_code == 422\n+\n+\n+def test_redirect_survives_analytics_persistence_failure(\n+    client: TestClient, monkeypatch: object\n+) -> None:\n+    clear_shortener_data()\n+    client.post(\n+        \"/api/v1/links\",\n+        json={\n+            \"original_url\": \"https://example.com\",\n+            \"custom_alias\": \"safe-redirect\",\n+        },\n+    )\n+\n+    def fail_recording(*_: object) -> None:\n+        raise RuntimeError(\"analytics store unavailable\")\n+\n+    monkeypatch.setattr(LinkService, \"record_click\", fail_recording)\n+    response = client.get(\"/safe-redirect\", follow_redirects=False)\n+    assert response.status_code == 307\n+    assert response.headers[\"location\"] == \"https://example.com\"\n",
+        "completed_at": "2026-10-07T21:51:07.926694+00:00",
+        "duration_ms": 7418.87
+      },
+      "context_version": 6
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    },
+    {
+      "decision": "Route architecture work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 3
+    },
+    {
+      "decision": "Route implementation work through Terra.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 4
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 5
+    },
+    {
+      "decision": "Route validation work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 6
+    },
+    {
+      "decision": "Run the brownfield patch in an isolated baseline worktree.",
+      "rationale": "Protect uncommitted orchestrator changes while demonstrating Git rollback.",
+      "context_version": 6
+    }
+  ],
+  "saved_at": "2026-10-07T21:51:08.017774+00:00"
+}

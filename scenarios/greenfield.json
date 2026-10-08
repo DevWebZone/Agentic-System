@@ -1,0 +1,30 @@
+{
+  "name": "greenfield",
+  "title": "Greenfield URL-shortener design and validation",
+  "description": "Design-and-validation pass over the existing Phase 2 URL-shortener baseline.",
+  "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+  "nodes": [
+    {
+      "node_key": "requirements",
+      "node_type": "requirements"
+    },
+    {
+      "node_key": "architecture",
+      "node_type": "architecture",
+      "dependency_keys": ["requirements"],
+      "concern_tags": ["api", "database"]
+    },
+    {
+      "node_key": "test-plan",
+      "node_type": "testing",
+      "dependency_keys": ["requirements"],
+      "concern_tags": ["testing"]
+    },
+    {
+      "node_key": "validation",
+      "node_type": "validation",
+      "dependency_keys": ["architecture", "test-plan"],
+      "concern_tags": ["testing"]
+    }
+  ]
+}

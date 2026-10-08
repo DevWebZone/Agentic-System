@@ -149,3 +149,14 @@ class OrchestrationMetricsResponse(BaseModel):
     average_stage_latency_ms: float | None
     average_approval_wait_ms: float | None
     mttr_ms: float | None
+
+
+class ScenarioResponse(BaseModel):
+    name: str
+    title: str
+    description: str
+
+
+class ScenarioRunResponse(BaseModel):
+    scenario: str
+    workflow: WorkflowResponse

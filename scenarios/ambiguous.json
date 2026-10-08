@@ -1,0 +1,24 @@
+{
+  "name": "ambiguous",
+  "title": "Ambiguous enterprise-readiness requirement",
+  "description": "Intentionally pauses for human clarification before design or implementation can proceed.",
+  "requirement": "Make the URL shortener enterprise-ready and safer.",
+  "nodes": [
+    {
+      "node_key": "requirements",
+      "node_type": "requirements"
+    },
+    {
+      "node_key": "architecture",
+      "node_type": "architecture",
+      "dependency_keys": ["requirements"],
+      "concern_tags": ["security", "api", "database"]
+    },
+    {
+      "node_key": "risk-review",
+      "node_type": "risk_review",
+      "dependency_keys": ["requirements"],
+      "concern_tags": ["security"]
+    }
+  ]
+}

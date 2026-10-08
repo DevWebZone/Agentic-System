@@ -1,0 +1,76 @@
+{
+  "scenario": "greenfield",
+  "workflow_id": 1,
+  "status": "WAITING_FOR_APPROVAL",
+  "artifacts": [
+    {
+      "node_key": "requirements",
+      "artifact_type": "requirements_analysis",
+      "summary": "Normalized the engineering requirement and identified clarification needs.",
+      "content": {
+        "normalized_requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "ambiguities": [],
+        "clarification_questions": [],
+        "acceptance_criteria": [
+          "The requirement is represented by reviewable engineering artifacts.",
+          "Required validation and governance gates are recorded before release readiness."
+        ],
+        "assumptions": [
+          "Existing URL-shortener API compatibility remains required unless approved otherwise."
+        ],
+        "risks": [],
+        "execution": {
+          "source": "deterministic"
+        }
+      },
+      "context_version": 2
+    },
+    {
+      "node_key": "test-plan",
+      "artifact_type": "test_plan",
+      "summary": "Produced a test_plan for 'test-plan'.",
+      "content": {
+        "stage": "testing",
+        "model_route": "Luna",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "requirements"
+        ],
+        "output": {
+          "tests": [
+            "unit",
+            "integration",
+            "regression"
+          ],
+          "acceptance": [
+            "Required tests must pass before release."
+          ]
+        }
+      },
+      "context_version": 3
+    },
+    {
+      "node_key": "scenario",
+      "artifact_type": "scenario_definition",
+      "summary": "Design-and-validation pass over the existing Phase 2 URL-shortener baseline.",
+      "content": {
+        "name": "greenfield",
+        "label": "design_and_validation_over_phase_2_baseline"
+      },
+      "context_version": 3
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 3
+    }
+  ],
+  "saved_at": "2026-10-07T21:50:58.701267+00:00"
+}

@@ -1,0 +1,55 @@
+{
+  "scenario": "ambiguous",
+  "workflow_id": 1,
+  "status": "WAITING_FOR_INPUT",
+  "artifacts": [
+    {
+      "node_key": "requirements",
+      "artifact_type": "requirements_analysis",
+      "summary": "Normalized the engineering requirement and identified clarification needs.",
+      "content": {
+        "normalized_requirement": "Make the URL shortener enterprise-ready and safer.",
+        "ambiguities": [
+          "Authentication and authorization expectations are unspecified.",
+          "Analytics privacy and retention requirements are unspecified.",
+          "Availability, traffic, and abuse-protection targets are unspecified."
+        ],
+        "clarification_questions": [
+          "Must users authenticate before creating or managing links?",
+          "Which analytics data may be retained and for how long?",
+          "Which availability and abuse-prevention targets define enterprise-ready?"
+        ],
+        "acceptance_criteria": [
+          "The requirement is represented by reviewable engineering artifacts.",
+          "Required validation and governance gates are recorded before release readiness."
+        ],
+        "assumptions": [],
+        "risks": [
+          "Implementing security controls without approved policy requirements can create gaps."
+        ],
+        "execution": {
+          "source": "deterministic"
+        }
+      },
+      "context_version": 2
+    },
+    {
+      "node_key": "scenario",
+      "artifact_type": "scenario_definition",
+      "summary": "Intentionally pauses for human clarification before design or implementation can proceed.",
+      "content": {
+        "name": "ambiguous",
+        "label": "runnable_scenario"
+      },
+      "context_version": 2
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    }
+  ],
+  "saved_at": "2026-10-07T21:50:59.473404+00:00"
+}
