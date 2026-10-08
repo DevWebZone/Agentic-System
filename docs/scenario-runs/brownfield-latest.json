@@ -1,14 +1,328 @@
 {
-  "scenario": "brownfield",
-  "workflow_id": 1,
-  "status": "COMPLETED",
+  "workflow": {
+    "id": 3,
+    "title": "Brownfield destination-host security improvement",
+    "status": "SAFE_STOPPED",
+    "planned_by": "planner",
+    "requirement_version": 1,
+    "graph_version": 1,
+    "context_version": 11,
+    "original_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+    "normalized_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes."
+  },
+  "plan_and_rationale": [
+    {
+      "decision": "graph planned",
+      "rationale": {
+        "detected_concerns": [
+          "api",
+          "security",
+          "testing",
+          "docs"
+        ],
+        "included_nodes": [
+          {
+            "node_key": "requirements",
+            "node_type": "requirements",
+            "requires_approval": false,
+            "dependency_keys": [],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Capture the original requirement."
+          },
+          {
+            "node_key": "ambiguity-check",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "requirements"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Review the normalized requirement for ambiguity before design proceeds."
+          },
+          {
+            "node_key": "architecture",
+            "node_type": "architecture",
+            "requires_approval": false,
+            "dependency_keys": [
+              "ambiguity-check"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Establish the design boundary for the requested concerns."
+          },
+          {
+            "node_key": "task-decomposition",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "architecture"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Break the change into governed execution stages."
+          },
+          {
+            "node_key": "risk-review",
+            "node_type": "risk_review",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api",
+              "security"
+            ],
+            "reason": "Security, API, or database concerns require explicit risk review."
+          },
+          {
+            "node_key": "test-plan",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Testing is always required before implementation."
+          },
+          {
+            "node_key": "implementation-plan",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation planning is always required before changes are proposed."
+          },
+          {
+            "node_key": "plan-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-plan",
+              "implementation-plan",
+              "risk-review"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Synchronize the planning branch before approval or implementation work."
+          },
+          {
+            "node_key": "implementation-approval",
+            "node_type": "planning",
+            "requires_approval": true,
+            "dependency_keys": [
+              "plan-sync"
+            ],
+            "concern_tags": [
+              "api",
+              "security"
+            ],
+            "reason": "Pause for approval when the planned implementation touches high-impact concerns."
+          },
+          {
+            "node_key": "implementation",
+            "node_type": "implementation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation follows the approved plan."
+          },
+          {
+            "node_key": "test-execution",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Execute tests after implementation is available."
+          },
+          {
+            "node_key": "documentation",
+            "node_type": "documentation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "docs"
+            ],
+            "reason": "Documentation always runs in parallel with test execution."
+          },
+          {
+            "node_key": "validation-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-execution",
+              "documentation"
+            ],
+            "concern_tags": [
+              "testing",
+              "docs"
+            ],
+            "reason": "Join documentation and test execution before final validation."
+          },
+          {
+            "node_key": "validation",
+            "node_type": "validation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "validation-sync"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Validation is the final automated gate before release approval."
+          },
+          {
+            "node_key": "release-approval",
+            "node_type": "release",
+            "requires_approval": true,
+            "dependency_keys": [
+              "validation"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Release always requires approval after validation passes."
+          },
+          {
+            "node_key": "final-summary",
+            "node_type": "summary",
+            "requires_approval": false,
+            "dependency_keys": [
+              "release-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Summarize the workflow after release approval."
+          }
+        ],
+        "excluded_nodes": [
+          {
+            "node_key": "migration-review",
+            "reason": "No database concern was detected."
+          },
+          {
+            "node_key": "analytics-impact",
+            "reason": "No analytics concern was detected."
+          }
+        ]
+      },
+      "actor": "planner",
+      "detected_concerns": [
+        "api",
+        "security",
+        "testing",
+        "docs"
+      ],
+      "context_version": 1
+    },
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 3
+    },
+    {
+      "decision": "Route architecture work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 4
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 5
+    },
+    {
+      "decision": "Route risk_review work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 6
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 7
+    },
+    {
+      "decision": "Use the real shortener impact scan for the brownfield plan.",
+      "rationale": "The affected files and tests are derived from current source references.",
+      "context_version": 8
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 9
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 10
+    },
+    {
+      "decision": "Propose the scenario's reviewed destination-host patch.",
+      "rationale": "The patch is a fixed hand-written scenario artifact, not generated code.",
+      "context_version": 11
+    }
+  ],
   "artifacts": [
     {
       "node_key": "requirements",
       "artifact_type": "requirements_analysis",
       "summary": "Normalized the engineering requirement and identified clarification needs.",
       "content": {
-        "normalized_requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "normalized_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
         "ambiguities": [],
         "clarification_questions": [],
         "acceptance_criteria": [
@@ -26,15 +340,41 @@
       "context_version": 2
     },
     {
-      "node_key": "impact-analysis",
+      "node_key": "ambiguity-check",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'ambiguity-check'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "requirements"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 3
+    },
+    {
+      "node_key": "architecture",
       "artifact_type": "architecture_overview",
-      "summary": "Produced a architecture_overview for 'impact-analysis'.",
+      "summary": "Produced a architecture_overview for 'architecture'.",
       "content": {
         "stage": "architecture",
         "model_route": "Sol",
-        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
         "dependency_nodes": [
-          "requirements"
+          "ambiguity-check"
         ],
         "output": {
           "components": [
@@ -48,41 +388,68 @@
           ]
         }
       },
-      "context_version": 3
-    },
-    {
-      "node_key": "implementation",
-      "artifact_type": "implementation_plan",
-      "summary": "Produced a implementation_plan for 'implementation'.",
-      "content": {
-        "stage": "implementation",
-        "model_route": "Terra",
-        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
-        "dependency_nodes": [
-          "impact-analysis"
-        ],
-        "output": {
-          "impacted_areas": [
-            "src/app",
-            "tests"
-          ],
-          "change_controls": [
-            "Use an approved patch and run focused tests."
-          ]
-        }
-      },
       "context_version": 4
     },
     {
-      "node_key": "testing",
+      "node_key": "task-decomposition",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'task-decomposition'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "architecture"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 5
+    },
+    {
+      "node_key": "risk-review",
+      "artifact_type": "risk_assessment",
+      "summary": "Produced a risk_assessment for 'risk-review'.",
+      "content": {
+        "stage": "risk_review",
+        "model_route": "Luna",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "risks": [
+            "API compatibility",
+            "data migration",
+            "security regression"
+          ],
+          "controls": [
+            "Approval and regression tests."
+          ]
+        }
+      },
+      "context_version": 6
+    },
+    {
+      "node_key": "test-plan",
       "artifact_type": "test_plan",
-      "summary": "Produced a test_plan for 'testing'.",
+      "summary": "Produced a test_plan for 'test-plan'.",
       "content": {
         "stage": "testing",
         "model_route": "Luna",
-        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
         "dependency_nodes": [
-          "implementation"
+          "task-decomposition"
         ],
         "output": {
           "tests": [
@@ -95,92 +462,429 @@
           ]
         }
       },
-      "context_version": 5
+      "context_version": 7
     },
     {
-      "node_key": "validation",
-      "artifact_type": "validation_report",
-      "summary": "Produced a validation_report for 'validation'.",
+      "node_key": "implementation-plan",
+      "artifact_type": "implementation_plan",
+      "summary": "Scanned the shortener and tests for references to destination validation.",
       "content": {
-        "stage": "validation",
-        "model_route": "Luna",
-        "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
+        "stage": "implementation",
+        "impacted_files": [
+          "src/app/shortener/api.py",
+          "src/app/shortener/models.py",
+          "src/app/shortener/schemas.py",
+          "src/app/shortener/service.py",
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_api.py"
+        ],
+        "affected_tests": [
+          "tests/test_shortener_api.py"
+        ]
+      },
+      "context_version": 8
+    },
+    {
+      "node_key": "plan-sync",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'plan-sync'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
         "dependency_nodes": [
-          "testing"
+          "risk-review",
+          "test-plan",
+          "implementation-plan"
         ],
         "output": {
-          "checks": [
-            "tests",
-            "lint",
-            "policy gates"
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
           ],
-          "release_rule": [
-            "Block release when required validation fails."
-          ],
-          "validation_passed": true
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
         }
       },
-      "context_version": 6
+      "context_version": 9
+    },
+    {
+      "node_key": "implementation-approval",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'implementation-approval'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "plan-sync"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 10
+    },
+    {
+      "node_key": "implementation",
+      "artifact_type": "brownfield_patch_report",
+      "summary": "Brownfield patch failed isolated pytest validation.",
+      "content": {
+        "patch": [
+          {
+            "op": "replace",
+            "path": "src/app/shortener/validation.py",
+            "old_text": "import re\n",
+            "new_text": "import ipaddress\nimport re\n"
+          },
+          {
+            "op": "replace",
+            "path": "src/app/shortener/validation.py",
+            "old_text": "    if parsed.username or parsed.password:\n        raise ValueError(\"original_url must not contain embedded credentials.\")\n    return urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path, parsed.query, \"\"))\n",
+            "new_text": "    if parsed.username or parsed.password:\n        raise ValueError(\"original_url must not contain embedded credentials.\")\n    host = (parsed.hostname or \"\").rstrip(\".\").lower()\n    if host == \"localhost\" or host.endswith(\".localhost\"):\n        raise ValueError(\n            \"original_url must not point to a local or private network host.\"\n        )\n    try:\n        address = ipaddress.ip_address(host)\n    except ValueError:\n        address = None\n    if True:\n        raise ValueError(\n            \"original_url must not point to a local or private network host.\"\n        )\n    return urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path, parsed.query, \"\"))\n"
+          },
+          {
+            "op": "create",
+            "path": "tests/test_shortener_destination_security.py",
+            "old_text": "",
+            "new_text": "from fastapi.testclient import TestClient\nimport pytest\n\nfrom app.shortener.validation import normalize_destination_url\n\n\n@pytest.mark.parametrize(\n    \"url\",\n    [\n        \"http://localhost/private\",\n        \"http://127.0.0.1/private\",\n        \"http://10.2.3.4/private\",\n        \"http://172.16.1.2/private\",\n        \"http://192.168.1.2/private\",\n        \"http://169.254.1.2/private\",\n        \"http://[::1]/private\",\n    ],\n)\ndef test_local_and_private_destination_hosts_are_rejected(url: str) -> None:\n    with pytest.raises(ValueError, match=\"local or private network\"):\n        normalize_destination_url(url)\n\n\ndef test_public_destination_remains_accepted() -> None:\n    assert normalize_destination_url(\"https://example.com/path\") == \"https://example.com/path\"\n\n\ndef test_local_destination_preserves_validation_error_shape(\n    client: TestClient,\n) -> None:\n    response = client.post(\n        \"/api/v1/links\",\n        json={\"original_url\": \"http://localhost/private\"},\n    )\n\n    assert response.status_code == 422\n    assert set(response.json()) == {\"error\", \"detail\", \"request_id\"}\n"
+          }
+        ],
+        "proposed_by": "brownfield_implementation",
+        "patch_paths": [
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_destination_security.py"
+        ],
+        "impacted_files": [
+          "src/app/shortener/api.py",
+          "src/app/shortener/models.py",
+          "src/app/shortener/schemas.py",
+          "src/app/shortener/service.py",
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_api.py"
+        ],
+        "affected_tests": [
+          "tests/test_shortener_api.py"
+        ],
+        "pytest_result": {
+          "passed": false,
+          "exit_code": 1,
+          "tests_passed": 9,
+          "tests_failed": 5,
+          "duration_seconds": 2.264,
+          "output_tail": [
+            "    def test_public_destination_remains_accepted() -> None:",
+            ">       assert normalize_destination_url(\"https://example.com/path\") == \"https://example.com/path\"",
+            "",
+            "tests/test_shortener_destination_security.py:25: ",
+            "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _",
+            "",
+            "value = 'https://example.com/path'",
+            "",
+            "    def normalize_destination_url(value: str) -> str:",
+            "        \"\"\"Accept only absolute HTTP(S) destinations and return a normalized representation.\"\"\"",
+            "    ",
+            "        candidate = value.strip()",
+            "        parsed = urlsplit(candidate)",
+            "        if parsed.scheme.lower() not in {\"http\", \"https\"} or not parsed.netloc:",
+            "            raise ValueError(\"original_url must be an absolute HTTP or HTTPS URL.\")",
+            "        if parsed.username or parsed.password:",
+            "            raise ValueError(\"original_url must not contain embedded credentials.\")",
+            "        host = (parsed.hostname or \"\").rstrip(\".\").lower()",
+            "        if host == \"localhost\" or host.endswith(\".localhost\"):",
+            "            raise ValueError(",
+            "                \"original_url must not point to a local or private network host.\"",
+            "            )",
+            "        try:",
+            "            address = ipaddress.ip_address(host)",
+            "        except ValueError:",
+            "            address = None",
+            "        if True:",
+            ">           raise ValueError(",
+            "                \"original_url must not point to a local or private network host.\"",
+            "            )",
+            "E           ValueError: original_url must not point to a local or private network host.",
+            "",
+            "src/app/shortener/validation.py:30: ValueError",
+            "=========================== short test summary info ===========================",
+            "FAILED tests/test_shortener_api.py::test_create_and_inspect_custom_link - ass...",
+            "FAILED tests/test_shortener_api.py::test_redirect_records_analytics - assert ...",
+            "FAILED tests/test_shortener_api.py::test_duplicate_alias_and_reserved_alias_are_rejected",
+            "FAILED tests/test_shortener_api.py::test_expired_and_disabled_links_do_not_redirect",
+            "FAILED tests/test_shortener_destination_security.py::test_public_destination_remains_accepted",
+            "5 failed, 9 passed in 0.35s"
+          ],
+          "command": [
+            "<python>/python.exe",
+            "-m",
+            "pytest",
+            "tests/test_shortener_api.py",
+            "tests/test_shortener_destination_security.py"
+          ],
+          "reason": null
+        },
+        "worktree_isolated": true
+      },
+      "context_version": 11
     },
     {
       "node_key": "scenario",
       "artifact_type": "scenario_definition",
-      "summary": "Applies and validates a reviewed real patch in an isolated Git worktree.",
+      "summary": "Analyzes the shortener, applies a fixed security patch in an isolated Git worktree, and runs tests.",
       "content": {
         "name": "brownfield",
         "label": "runnable_scenario"
       },
-      "context_version": 6
-    },
-    {
-      "node_key": "brownfield-patch",
-      "artifact_type": "patch_execution_report",
-      "summary": "Applied, tested, and isolated a real brownfield reliability patch.",
-      "content": {
-        "baseline_commit": "9966dcc",
-        "worktree_isolated": true,
-        "forced_failure_rolled_back": true,
-        "forced_failure_output": ".....F                                                                   [100%]\n================================== FAILURES ===================================\n________________ test_forced_brownfield_rollback_demonstration ________________\n\n    def test_forced_brownfield_rollback_demonstration() -> None:\n>       assert False, 'intentional rollback demonstration'\nE       AssertionError: intentional rollback demonstration\nE       assert False\n\ntests\\test_shortener_api.py:113: AssertionError\n=========================== short test summary info ===========================\nFAILED tests/test_shortener_api.py::test_forced_brownfield_rollback_demonstration\n",
-        "valid_patch_tests_passed": true,
-        "valid_patch_test_output": "......                                                                   [100%]\n",
-        "patch_diff": "diff --git a/src/app/shortener/api.py b/src/app/shortener/api.py\nindex f24a615..337f14f 100644\n--- a/src/app/shortener/api.py\n+++ b/src/app/shortener/api.py\n@@ -93,12 +93,12 @@ def redirect_link(\n     service: LinkService = Depends(get_link_service),\n ) -> RedirectResponse:\n     link = service.resolve_redirect(short_code)\n-    try:\n-        service.record_click(\n-            link, request.headers.get(\"referer\"), request.headers.get(\"user-agent\")\n-        )\n-    except Exception:\n-        logger.exception(\n-            \"analytics_recording_failed\", extra={\"request_id\": request.state.request_id}\n+    analytics_recorded = service.record_click_safely(\n+        link, request.headers.get(\"referer\"), request.headers.get(\"user-agent\")\n+    )\n+    if not analytics_recorded:\n+        logger.warning(\n+            \"redirect_completed_without_analytics\",\n+            extra={\"request_id\": request.state.request_id},\n         )\n     return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)\ndiff --git a/src/app/shortener/service.py b/src/app/shortener/service.py\nindex 83923d4..42e8191 100644\n--- a/src/app/shortener/service.py\n+++ b/src/app/shortener/service.py\n@@ -1,5 +1,7 @@\n from datetime import UTC, datetime\n \n+import logging\n+\n from fastapi import HTTPException, status\n from sqlalchemy.exc import IntegrityError\n \n@@ -10,6 +12,7 @@ from app.shortener.schemas import CreateLinkRequest, UpdateLinkRequest\n from app.shortener.validation import require_future_expiration\n \n MAX_CODE_GENERATION_ATTEMPTS = 5\n+logger = logging.getLogger(__name__)\n \n \n class LinkService:\n@@ -76,6 +79,22 @@ class LinkService:\n         self.repository.add_click_event(link, referrer, user_agent)\n         self.repository.session.commit()\n \n+    def record_click_safely(\n+        self,\n+        link: Link,\n+        referrer: str | None,\n+        user_agent: str | None,\n+    ) -> bool:\n+        \"\"\"Protect redirects when analytics persistence has transient failures.\"\"\"\n+\n+        try:\n+            self.record_click(link, referrer, user_agent)\n+            return True\n+        except Exception:\n+            self.repository.session.rollback()\n+            logger.exception(\"analytics_recording_failed\")\n+            return False\n+\n     def get_analytics(self, short_code: str) -> tuple[Link, int, list[tuple[str, int]]]:\n         link = self.get_link(short_code)\n         total_clicks = self.repository.click_count(link.id)\ndiff --git a/tests/test_shortener_api.py b/tests/test_shortener_api.py\nindex 113ba07..52f8620 100644\n--- a/tests/test_shortener_api.py\n+++ b/tests/test_shortener_api.py\n@@ -5,6 +5,7 @@ from sqlalchemy import delete\n \n from app.core.database import SessionLocal\n from app.shortener.models import ClickEvent, Link\n+from app.shortener.service import LinkService\n \n \n def clear_shortener_data() -> None:\n@@ -107,3 +108,24 @@ def test_invalid_destination_and_past_expiration_are_rejected(client: TestClient\n         \"/api/v1/links\", json={\"original_url\": \"https://example.com\", \"expires_at\": past}\n     )\n     assert response.status_code == 422\n+\n+\n+def test_redirect_survives_analytics_persistence_failure(\n+    client: TestClient, monkeypatch: object\n+) -> None:\n+    clear_shortener_data()\n+    client.post(\n+        \"/api/v1/links\",\n+        json={\n+            \"original_url\": \"https://example.com\",\n+            \"custom_alias\": \"safe-redirect\",\n+        },\n+    )\n+\n+    def fail_recording(*_: object) -> None:\n+        raise RuntimeError(\"analytics store unavailable\")\n+\n+    monkeypatch.setattr(LinkService, \"record_click\", fail_recording)\n+    response = client.get(\"/safe-redirect\", follow_redirects=False)\n+    assert response.status_code == 307\n+    assert response.headers[\"location\"] == \"https://example.com\"\n",
-        "completed_at": "2026-10-08T03:28:10.935330+00:00",
-        "duration_ms": 21814.51
-      },
-      "context_version": 6
+      "context_version": 11
     }
   ],
-  "decisions": [
+  "assumptions": [
+    "Existing URL-shortener API compatibility remains required unless approved otherwise."
+  ],
+  "risks": [],
+  "approvals": [
     {
-      "decision": "Use deterministic requirement analysis.",
-      "rationale": "No enabled LLM response passed schema validation.",
-      "context_version": 2
+      "id": 5,
+      "node_id": 42,
+      "status": "APPROVED",
+      "reviewer": "scenario-reviewer",
+      "comments": "Approve the isolated brownfield patch demonstration."
     },
     {
-      "decision": "Route architecture work through Sol.",
-      "rationale": "Stage routing is explicit even when deterministic execution is active.",
-      "context_version": 3
-    },
-    {
-      "decision": "Route implementation work through Terra.",
-      "rationale": "Stage routing is explicit even when deterministic execution is active.",
-      "context_version": 4
-    },
-    {
-      "decision": "Route testing work through Luna.",
-      "rationale": "Stage routing is explicit even when deterministic execution is active.",
-      "context_version": 5
-    },
-    {
-      "decision": "Route validation work through Luna.",
-      "rationale": "Stage routing is explicit even when deterministic execution is active.",
-      "context_version": 6
-    },
-    {
-      "decision": "Run the brownfield patch in an isolated baseline worktree.",
-      "rationale": "Protect uncommitted orchestrator changes while demonstrating Git rollback.",
-      "context_version": 6
+      "id": 6,
+      "node_id": 43,
+      "status": "APPROVED",
+      "reviewer": "scenario-reviewer",
+      "comments": "Approve the isolated brownfield patch demonstration."
     }
   ],
-  "saved_at": "2026-10-08T03:28:11.108302+00:00"
+  "validation_results": [],
+  "node_outcomes": [
+    {
+      "node_key": "requirements",
+      "node_type": "requirements",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "ambiguity-check",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "architecture",
+      "node_type": "architecture",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "task-decomposition",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "risk-review",
+      "node_type": "risk_review",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "test-plan",
+      "node_type": "testing",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-plan",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "plan-sync",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-approval",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation",
+      "node_type": "implementation",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "test-execution",
+      "node_type": "testing",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "documentation",
+      "node_type": "documentation",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "validation-sync",
+      "node_type": "planning",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "validation",
+      "node_type": "validation",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "release-approval",
+      "node_type": "release",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    },
+    {
+      "node_key": "final-summary",
+      "node_type": "summary",
+      "status": "ROLLED_BACK",
+      "error_message": null
+    }
+  ],
+  "release_readiness": {
+    "status": "not_ready",
+    "safe_stop_reason": "Brownfield tests failed with 5 failing tests and 9 passing tests."
+  },
+  "scenario": "brownfield",
+  "node_statuses": {
+    "requirements": "SUCCEEDED",
+    "ambiguity-check": "SUCCEEDED",
+    "architecture": "SUCCEEDED",
+    "task-decomposition": "SUCCEEDED",
+    "risk-review": "SUCCEEDED",
+    "test-plan": "SUCCEEDED",
+    "implementation-plan": "SUCCEEDED",
+    "plan-sync": "SUCCEEDED",
+    "implementation-approval": "SUCCEEDED",
+    "implementation": "ROLLED_BACK",
+    "test-execution": "ROLLED_BACK",
+    "documentation": "ROLLED_BACK",
+    "validation-sync": "ROLLED_BACK",
+    "validation": "ROLLED_BACK",
+    "release-approval": "ROLLED_BACK",
+    "final-summary": "ROLLED_BACK"
+  },
+  "audit_event_types": [
+    "workflow_created",
+    "workflow_run_started",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "approval_requested",
+    "node_transitioned",
+    "approval_granted",
+    "workflow_run_started",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "node_transitioned",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_transitioned",
+    "approval_requested",
+    "node_transitioned",
+    "approval_granted",
+    "workflow_run_started",
+    "checkpoint_created",
+    "execution_wave_started",
+    "node_transitioned",
+    "node_artifact_persisted",
+    "patch_applied",
+    "tests_failed",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "node_transitioned",
+    "rollback_performed",
+    "workflow_safe_stopped",
+    "scenario_started"
+  ],
+  "repository_status_unchanged": true,
+  "saved_at": "2026-10-08T21:42:36.120804+00:00"
 }

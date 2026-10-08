@@ -1,3 +1,5 @@
+import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -6,6 +8,10 @@ from sqlalchemy import delete
 
 from app.core.database import SessionLocal
 from app.orchestration.models import Approval, AuditEvent, ExecutionAttempt, Workflow, WorkflowNode
+from app.orchestration.scenario_output import (
+    REPOSITORY_ROOT,
+    normalize_scenario_output_paths,
+)
 
 
 def clear_workflows() -> None:
@@ -16,6 +22,24 @@ def clear_workflows() -> None:
         session.execute(delete(WorkflowNode))
         session.execute(delete(Workflow))
         session.commit()
+
+
+def test_scenario_output_paths_are_machine_independent(tmp_path: Path) -> None:
+    worktree_path = tmp_path / "agentic-brownfield-probe" / "checkout" / "tests" / "test_file.py"
+    payload = {
+        "repository_file": str(REPOSITORY_ROOT / "src" / "app" / "main.py"),
+        "python": sys.executable,
+        "test_output": f'File "{worktree_path}", line 9',
+    }
+
+    normalized = normalize_scenario_output_paths(payload)
+    serialized = json.dumps(normalized)
+
+    assert normalized["repository_file"] == "src/app/main.py"
+    assert normalized["python"].startswith("<python>/")
+    assert "<temporary-worktree>/tests/test_file.py" in normalized["test_output"]
+    assert str(REPOSITORY_ROOT).lower() not in serialized.lower()
+    assert sys.prefix.lower() not in serialized.lower()
 
 
 def test_scenario_catalog_and_greenfield_run(

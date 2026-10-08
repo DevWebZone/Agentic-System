@@ -38,10 +38,10 @@ Behavior and scope notes:
 
 Read the reviewer-facing documents:
 
-- `docs\architecture.md`
-- `docs\scenarios.md`
-- `docs\limitations.md`
-- `docs\adr\0001-modular-monolith-and-persistent-workflow-foundation.md`
+- `docs/architecture.md`
+- `docs/scenarios.md`
+- `docs/limitations.md`
+- `docs/adr/0001-modular-monolith-and-persistent-workflow-foundation.md`
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ Read the reviewer-facing documents:
 
 ## Setup
 
-From `C:\Users\asus\Downloads\GitHub\Agentic System`:
+From the repository root:
 
 ```powershell
 python -m venv .venv
@@ -146,7 +146,7 @@ Equivalent API endpoints:
 | `GET` | `/api/v1/scenarios` | List scenario definitions. |
 | `POST` | `/api/v1/scenarios/{name}/run` | Run `greenfield`, `brownfield`, or `ambiguous`. |
 
-Scenario review outputs are saved to `docs\scenario-runs\`. See
+Scenario review outputs are saved to `docs/scenario-runs/`. See
 [the scenario guide](docs/scenarios.md) for the recorded graphs and outcomes.
 
 ## Validation commands

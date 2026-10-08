@@ -334,7 +334,7 @@
       "decision": "Execute the configured pytest validation gate.",
       "rationale": "Release readiness depends on real passing test evidence.",
       "command": [
-        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<python>/python.exe",
         "-m",
         "pytest",
         "tests/test_shortener_api.py"
@@ -610,13 +610,13 @@
           "exit_code": 0,
           "tests_passed": 14,
           "tests_failed": 0,
-          "duration_seconds": 6.843,
+          "duration_seconds": 2.281,
           "output_tail": [
             "..............                                                           [100%]",
-            "14 passed in 0.52s"
+            "14 passed in 0.34s"
           ],
           "command": [
-            "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "<python>/python.exe",
             "-m",
             "pytest",
             "tests/test_shortener_api.py",
@@ -714,13 +714,13 @@
         "exit_code": 0,
         "tests_passed": 5,
         "tests_failed": 0,
-        "duration_seconds": 6.767,
+        "duration_seconds": 2.633,
         "output_tail": [
           ".....                                                                    [100%]",
-          "5 passed in 0.83s"
+          "5 passed in 0.35s"
         ],
         "command": [
-          "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "<python>/python.exe",
           "-m",
           "pytest",
           "tests/test_shortener_api.py"
@@ -774,13 +774,13 @@
       "exit_code": 0,
       "tests_passed": 5,
       "tests_failed": 0,
-      "duration_seconds": 6.767,
+      "duration_seconds": 2.633,
       "output_tail": [
         ".....                                                                    [100%]",
-        "5 passed in 0.83s"
+        "5 passed in 0.35s"
       ],
       "command": [
-        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<python>/python.exe",
         "-m",
         "pytest",
         "tests/test_shortener_api.py"
@@ -908,5 +908,6 @@
     "validation": "SUCCEEDED",
     "release-approval": "WAITING_FOR_APPROVAL",
     "final-summary": "PENDING"
-  }
+  },
+  "saved_at": "2026-10-08T21:42:30.545914+00:00"
 }

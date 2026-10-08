@@ -1,6 +1,4 @@
 import json
-from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -20,10 +18,11 @@ from app.orchestration.models import (
     WorkflowNode,
     WorkflowStatus,
 )
+from app.orchestration.scenario_output import REPOSITORY_ROOT, write_scenario_run
 from app.orchestration.schemas import CreateWorkflowRequest
 
-SCENARIO_DIRECTORY = Path(__file__).resolve().parents[3] / "scenarios"
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+SCENARIO_DIRECTORY = REPOSITORY_ROOT / "scenarios"
+PROJECT_ROOT = REPOSITORY_ROOT
 SCENARIO_RUN_DIRECTORY = PROJECT_ROOT / "docs" / "scenario-runs"
 
 
@@ -105,23 +104,8 @@ class ScenarioRunner:
     def _save_run_output(self, workflow: Workflow, name: str) -> None:
         """Save a review artifact without requiring a database export or running API server."""
 
-        SCENARIO_RUN_DIRECTORY.mkdir(parents=True, exist_ok=True)
         output_path = SCENARIO_RUN_DIRECTORY / f"{name}-latest.json"
-        output_path.write_text(
-            json.dumps(
-                {
-                    "scenario": name,
-                    "workflow_id": workflow.id,
-                    "status": workflow.status,
-                    "artifacts": workflow.artifacts,
-                    "decisions": workflow.decisions,
-                    "saved_at": datetime.now(UTC).isoformat(),
-                },
-                default=str,
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
+        write_scenario_run(self.session, workflow, output_path)
 
     def _append_scenario_artifact(self, workflow: Workflow, definition: dict[str, Any]) -> None:
         artifact = {

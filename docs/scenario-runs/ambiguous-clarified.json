@@ -1,6 +1,6 @@
 {
   "workflow": {
-    "id": 5,
+    "id": 4,
     "title": "Ambiguous enterprise-readiness requirement",
     "status": "WAITING_FOR_APPROVAL",
     "planned_by": "planner",
@@ -302,7 +302,7 @@
       "decision": "Execute the configured pytest validation gate.",
       "rationale": "Release readiness depends on real passing test evidence.",
       "command": [
-        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<python>/python.exe",
         "-m",
         "pytest",
         "tests/test_shortener_api.py"
@@ -663,13 +663,13 @@
         "exit_code": 0,
         "tests_passed": 5,
         "tests_failed": 0,
-        "duration_seconds": 2.151,
+        "duration_seconds": 2.209,
         "output_tail": [
           ".....                                                                    [100%]",
-          "5 passed in 0.29s"
+          "5 passed in 0.38s"
         ],
         "command": [
-          "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "<python>/python.exe",
           "-m",
           "pytest",
           "tests/test_shortener_api.py"
@@ -687,8 +687,8 @@
   ],
   "approvals": [
     {
-      "id": 9,
-      "node_id": 79,
+      "id": 7,
+      "node_id": 63,
       "status": "PENDING",
       "reviewer": null,
       "comments": null
@@ -701,13 +701,13 @@
       "exit_code": 0,
       "tests_passed": 5,
       "tests_failed": 0,
-      "duration_seconds": 2.151,
+      "duration_seconds": 2.209,
       "output_tail": [
         ".....                                                                    [100%]",
-        "5 passed in 0.29s"
+        "5 passed in 0.38s"
       ],
       "command": [
-        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "<python>/python.exe",
         "-m",
         "pytest",
         "tests/test_shortener_api.py"
@@ -812,6 +812,23 @@
     "safe_stop_reason": null
   },
   "scenario": "ambiguous",
+  "node_statuses": {
+    "requirements": "SUCCEEDED",
+    "ambiguity-check": "SUCCEEDED",
+    "architecture": "SUCCEEDED",
+    "task-decomposition": "SUCCEEDED",
+    "test-plan": "SUCCEEDED",
+    "implementation-plan": "SUCCEEDED",
+    "plan-sync": "SUCCEEDED",
+    "implementation-approval": "SUCCEEDED",
+    "implementation": "SUCCEEDED",
+    "test-execution": "SUCCEEDED",
+    "documentation": "SUCCEEDED",
+    "validation-sync": "SUCCEEDED",
+    "validation": "SUCCEEDED",
+    "release-approval": "WAITING_FOR_APPROVAL",
+    "final-summary": "PENDING"
+  },
   "initial_status": "WAITING_FOR_INPUT",
   "clarification": "Require authenticated users to create and manage links. Retain click counts only, exclude referrers and personal data, and keep the existing redirect API response unchanged.",
   "continued_status": "WAITING_FOR_APPROVAL",
@@ -832,21 +849,5 @@
     "validation",
     "release-approval"
   ],
-  "node_statuses": {
-    "requirements": "SUCCEEDED",
-    "ambiguity-check": "SUCCEEDED",
-    "architecture": "SUCCEEDED",
-    "task-decomposition": "SUCCEEDED",
-    "test-plan": "SUCCEEDED",
-    "implementation-plan": "SUCCEEDED",
-    "plan-sync": "SUCCEEDED",
-    "implementation-approval": "SUCCEEDED",
-    "implementation": "SUCCEEDED",
-    "test-execution": "SUCCEEDED",
-    "documentation": "SUCCEEDED",
-    "validation-sync": "SUCCEEDED",
-    "validation": "SUCCEEDED",
-    "release-approval": "WAITING_FOR_APPROVAL",
-    "final-summary": "PENDING"
-  }
+  "saved_at": "2026-10-08T21:42:40.164904+00:00"
 }

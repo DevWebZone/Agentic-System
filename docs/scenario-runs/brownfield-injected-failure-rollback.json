@@ -1,6 +1,6 @@
 {
   "workflow": {
-    "id": 4,
+    "id": 3,
     "title": "Brownfield destination-host security improvement",
     "status": "SAFE_STOPPED",
     "planned_by": "planner",
@@ -584,12 +584,12 @@
           "exit_code": 1,
           "tests_passed": 9,
           "tests_failed": 5,
-          "duration_seconds": 6.279,
+          "duration_seconds": 2.264,
           "output_tail": [
             "    def test_public_destination_remains_accepted() -> None:",
             ">       assert normalize_destination_url(\"https://example.com/path\") == \"https://example.com/path\"",
             "",
-            "tests\\test_shortener_destination_security.py:25: ",
+            "tests/test_shortener_destination_security.py:25: ",
             "_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _",
             "",
             "value = 'https://example.com/path'",
@@ -618,17 +618,17 @@
             "            )",
             "E           ValueError: original_url must not point to a local or private network host.",
             "",
-            "src\\app\\shortener\\validation.py:30: ValueError",
+            "src/app/shortener/validation.py:30: ValueError",
             "=========================== short test summary info ===========================",
             "FAILED tests/test_shortener_api.py::test_create_and_inspect_custom_link - ass...",
             "FAILED tests/test_shortener_api.py::test_redirect_records_analytics - assert ...",
             "FAILED tests/test_shortener_api.py::test_duplicate_alias_and_reserved_alias_are_rejected",
             "FAILED tests/test_shortener_api.py::test_expired_and_disabled_links_do_not_redirect",
             "FAILED tests/test_shortener_destination_security.py::test_public_destination_remains_accepted",
-            "5 failed, 9 passed in 0.33s"
+            "5 failed, 9 passed in 0.35s"
           ],
           "command": [
-            "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "<python>/python.exe",
             "-m",
             "pytest",
             "tests/test_shortener_api.py",
@@ -657,15 +657,15 @@
   "risks": [],
   "approvals": [
     {
-      "id": 7,
-      "node_id": 58,
+      "id": 5,
+      "node_id": 42,
       "status": "APPROVED",
       "reviewer": "scenario-reviewer",
       "comments": "Approve the isolated brownfield patch demonstration."
     },
     {
-      "id": 8,
-      "node_id": 59,
+      "id": 6,
+      "node_id": 43,
       "status": "APPROVED",
       "reviewer": "scenario-reviewer",
       "comments": "Approve the isolated brownfield patch demonstration."
@@ -885,5 +885,6 @@
     "workflow_safe_stopped",
     "scenario_started"
   ],
-  "repository_status_unchanged": true
+  "repository_status_unchanged": true,
+  "saved_at": "2026-10-08T21:42:36.098105+00:00"
 }
