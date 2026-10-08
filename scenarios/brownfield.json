@@ -1,37 +1,7 @@
 {
   "name": "brownfield",
-  "title": "Brownfield redirect analytics reliability improvement",
-  "description": "Applies and validates a reviewed real patch in an isolated Git worktree.",
-  "requirement": "Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.",
-  "nodes": [
-    {
-      "node_key": "requirements",
-      "node_type": "requirements",
-      "concern_tags": ["analytics"]
-    },
-    {
-      "node_key": "impact-analysis",
-      "node_type": "architecture",
-      "dependency_keys": ["requirements"],
-      "concern_tags": ["analytics"]
-    },
-    {
-      "node_key": "implementation",
-      "node_type": "implementation",
-      "dependency_keys": ["impact-analysis"],
-      "concern_tags": ["analytics"]
-    },
-    {
-      "node_key": "testing",
-      "node_type": "testing",
-      "dependency_keys": ["implementation"],
-      "concern_tags": ["testing"]
-    },
-    {
-      "node_key": "validation",
-      "node_type": "validation",
-      "dependency_keys": ["testing"],
-      "concern_tags": ["testing"]
-    }
-  ]
+  "title": "Brownfield destination-host security improvement",
+  "description": "Analyzes the shortener, applies a fixed security patch in an isolated Git worktree, and runs tests.",
+  "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+  "patch_id": "reject_local_private_hosts"
 }

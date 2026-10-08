@@ -20,10 +20,12 @@ class CreateWorkflowRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     requirement: str = Field(min_length=3)
     scenario_type: str = Field(default="custom", max_length=32)
-    nodes: list[WorkflowNodeRequest] = Field(min_length=1)
+    nodes: list[WorkflowNodeRequest] | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def ensure_unique_keys(self) -> "CreateWorkflowRequest":
+        if self.nodes is None:
+            return self
         keys = [node.node_key for node in self.nodes]
         if len(keys) != len(set(keys)):
             raise ValueError("Workflow node keys must be unique.")
@@ -48,6 +50,7 @@ class WorkflowResponse(BaseModel):
     title: str
     original_requirement: str
     status: str
+    planned_by: str
     context_version: int
     graph_version: int
     created_at: datetime

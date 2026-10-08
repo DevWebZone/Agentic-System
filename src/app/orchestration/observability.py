@@ -83,11 +83,16 @@ def workflow_summary(session: Session, workflow: Workflow) -> dict[str, Any]:
         )
     )
     nodes = sorted(workflow.nodes, key=lambda node: node.id)
+    validation_results = list((workflow.context or {}).get("validation_results", []))
+    all_validations_passed = bool(validation_results) and all(
+        result.get("passed") is True for result in validation_results
+    )
     return {
         "workflow": {
             "id": workflow.id,
             "title": workflow.title,
             "status": workflow.status,
+            "planned_by": (workflow.context or {}).get("planned_by", "client"),
             "requirement_version": workflow.requirement_version,
             "graph_version": workflow.graph_version,
             "context_version": workflow.context_version,
@@ -108,11 +113,7 @@ def workflow_summary(session: Session, workflow: Workflow) -> dict[str, Any]:
             }
             for approval in approvals
         ],
-        "validation_results": [
-            node.output_artifact
-            for node in nodes
-            if node.node_type == "validation" and node.output_artifact is not None
-        ],
+        "validation_results": validation_results,
         "node_outcomes": [
             {
                 "node_key": node.node_key,
@@ -123,7 +124,11 @@ def workflow_summary(session: Session, workflow: Workflow) -> dict[str, Any]:
             for node in nodes
         ],
         "release_readiness": {
-            "status": "ready" if workflow.status == "COMPLETED" else "not_ready",
+            "status": (
+                "ready"
+                if workflow.status == "COMPLETED" and all_validations_passed
+                else "not_ready"
+            ),
             "safe_stop_reason": workflow.safe_stop_reason,
         },
     }

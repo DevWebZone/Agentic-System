@@ -1,14 +1,22 @@
+from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.orchestration.agents.base import AgentInput, WorkflowAgent
 from app.orchestration.agents.registry import build_agent_registry
+from app.orchestration.brownfield import (
+    analyze_shortener_impact,
+    failure_patch,
+    run_brownfield_patch,
+)
 from app.orchestration.governance import has_valid_approval, request_approval
-from app.orchestration.graph import GraphNode, ready_nodes, validate_graph
+from app.orchestration.graph import GraphNode, downstream_nodes, ready_nodes, validate_graph
 from app.orchestration.models import (
     AuditEvent,
     ExecutionAttempt,
@@ -17,28 +25,72 @@ from app.orchestration.models import (
     WorkflowNode,
     WorkflowStatus,
 )
+from app.orchestration.planner import plan_graph
 from app.orchestration.policies import (
     PolicyViolationError,
     approval_required,
     risk_level_for,
     validate_agent_result,
+    validate_pytest_command,
 )
 from app.orchestration.recovery import create_checkpoint, rollback_to_latest_checkpoint
-from app.orchestration.schemas import CreateWorkflowRequest
+from app.orchestration.schemas import CreateWorkflowRequest, WorkflowNodeRequest
+from app.orchestration.test_runner import PytestRunResult, run_pytest
 from app.orchestration.transitions import transition_node
+
+
+class ResolvedPlan:
+    def __init__(
+        self,
+        *,
+        nodes: list[WorkflowNodeRequest],
+        planned_by: str,
+        decisions: list[dict[str, Any]],
+    ) -> None:
+        self.nodes = nodes
+        self.planned_by = planned_by
+        self.decisions = decisions
+
+
+TestRunner = Callable[..., PytestRunResult]
+
+
+class DeterministicValidationFailureError(ValueError):
+    """Raised when pytest completed but reported failing tests."""
+
+
+class BrownfieldTestFailureError(ValueError):
+    """Raised when a brownfield patch fails tests inside its isolated worktree."""
 
 
 class WorkflowEngine:
     """Stateful, dependency-aware executor for persisted workflow graphs."""
 
-    def __init__(self, session: Session, agents: dict[str, WorkflowAgent] | None = None) -> None:
+    def __init__(
+        self,
+        session: Session,
+        agents: dict[str, WorkflowAgent] | None = None,
+        *,
+        test_runner: TestRunner | None = None,
+        pytest_targets: list[str] | None = None,
+        project_root: Path | None = None,
+    ) -> None:
+        settings = get_settings()
         self.session = session
-        self.agents = agents or build_agent_registry()
+        self.agents = agents or build_agent_registry(settings)
+        self.test_runner = test_runner or run_pytest
+        self.pytest_targets = pytest_targets or [
+            target.strip()
+            for target in settings.pytest_gate_targets.split(",")
+            if target.strip()
+        ]
+        self.project_root = project_root or Path(__file__).resolve().parents[3]
 
     def create_workflow(self, request: CreateWorkflowRequest) -> Workflow:
+        resolved_plan = self._resolve_plan(request)
         graph = [
             GraphNode(key=node.node_key, dependencies=tuple(node.dependency_keys))
-            for node in request.nodes
+            for node in resolved_plan.nodes
         ]
         try:
             validate_graph(graph)
@@ -51,11 +103,16 @@ class WorkflowEngine:
             title=request.title,
             original_requirement=request.requirement,
             scenario_type=request.scenario_type,
-            context={"requirement": request.requirement, "execution_waves": []},
+            context={
+                "requirement": request.requirement,
+                "execution_waves": [],
+                "planned_by": resolved_plan.planned_by,
+            },
+            decisions=resolved_plan.decisions,
         )
         self.session.add(workflow)
         self.session.flush()
-        for node in request.nodes:
+        for node in resolved_plan.nodes:
             self.session.add(
                 WorkflowNode(
                     workflow_id=workflow.id,
@@ -76,10 +133,32 @@ class WorkflowEngine:
             None,
             "workflow_created",
             "system",
-            payload={"graph_nodes": len(request.nodes)},
+            payload={
+                "graph_nodes": len(resolved_plan.nodes),
+                "planned_by": resolved_plan.planned_by,
+            },
         )
         self.session.commit()
         return self.get_workflow(workflow.id)
+
+    def _resolve_plan(self, request: CreateWorkflowRequest) -> ResolvedPlan:
+        if request.nodes is not None:
+            return ResolvedPlan(nodes=request.nodes, planned_by="client", decisions=[])
+
+        plan = plan_graph(request.requirement)
+        return ResolvedPlan(
+            nodes=plan.nodes,
+            planned_by="planner",
+            decisions=[
+                {
+                    "decision": "graph planned",
+                    "rationale": plan.rationale,
+                    "actor": "planner",
+                    "detected_concerns": plan.detected_concerns,
+                    "context_version": 1,
+                }
+            ],
+        )
 
     def get_workflow(self, workflow_id: int) -> Workflow:
         workflow = self.session.scalar(select(Workflow).where(Workflow.id == workflow_id))
@@ -184,9 +263,25 @@ class WorkflowEngine:
         self.session.commit()
 
         try:
+            if node.node_type == "validation":
+                self._execute_validation_node(workflow, node, attempt)
+                return
+            if workflow.scenario_type == "brownfield" and node.node_key == "implementation-plan":
+                self._execute_brownfield_impact(workflow, node, attempt)
+                return
+            if workflow.scenario_type == "brownfield" and node.node_key == "implementation":
+                self._execute_brownfield_implementation(workflow, node, attempt)
+                return
             agent = self._resolve_agent(node)
-            result = agent.execute(self._agent_input(workflow, node))
-            validate_agent_result(node, result.content)
+            agent_input = self._agent_input(workflow, node)
+            result = agent.execute(agent_input)
+            validate_agent_result(
+                node,
+                {
+                    **result.content,
+                    "dependency_artifacts": agent_input.dependency_artifacts,
+                },
+            )
             artifact = {
                 "node_key": node.node_key,
                 "artifact_type": result.artifact_type,
@@ -232,6 +327,20 @@ class WorkflowEngine:
             transition_node(
                 self.session, node, NodeStatus.SUCCEEDED, actor=f"agent:{node.assigned_agent}"
             )
+        except DeterministicValidationFailureError as exc:
+            self._fail_attempt(attempt, exc)
+            transition_node(self.session, node, NodeStatus.FAILED, actor="engine")
+            self._safe_stop(
+                workflow,
+                node,
+                str(exc),
+                category="validation_failed",
+                transition_node_state=False,
+            )
+        except BrownfieldTestFailureError as exc:
+            self._fail_attempt(attempt, exc)
+            transition_node(self.session, node, NodeStatus.FAILED, actor="engine")
+            self._rollback_brownfield(workflow, node, str(exc))
         except PolicyViolationError as exc:
             self._fail_attempt(attempt, exc)
             self._safe_stop(workflow, node, str(exc), category="policy_violation")
@@ -252,6 +361,276 @@ class WorkflowEngine:
                 transition_node(self.session, node, NodeStatus.READY, actor="engine")
             else:
                 self._safe_stop(workflow, node, str(exc), category="retry_exhausted")
+
+    def _execute_brownfield_impact(
+        self,
+        workflow: Workflow,
+        node: WorkflowNode,
+        attempt: ExecutionAttempt,
+    ) -> None:
+        impact = analyze_shortener_impact(self.project_root)
+        artifact = {
+            "node_key": node.node_key,
+            "artifact_type": "implementation_plan",
+            "summary": "Scanned the shortener and tests for references to destination validation.",
+            "content": {
+                "stage": "implementation",
+                "impacted_files": impact["impacted_files"],
+                "affected_tests": impact["affected_tests"],
+            },
+            "context_version": workflow.context_version + 1,
+        }
+        self._persist_result(
+            workflow,
+            node,
+            artifact,
+            [
+                {
+                    "decision": "Use the real shortener impact scan for the brownfield plan.",
+                    "rationale": (
+                        "The affected files and tests are derived from current source references."
+                    ),
+                }
+            ],
+        )
+        workflow.context = {
+            **(workflow.context or {}),
+            "brownfield": {
+                **(workflow.context or {}).get("brownfield", {}),
+                "impact": impact,
+            },
+        }
+        self.session.commit()
+        attempt.status = NodeStatus.SUCCEEDED.value
+        attempt.completed_at = datetime.now(UTC)
+        node.completed_at = attempt.completed_at
+        transition_node(self.session, node, NodeStatus.SUCCEEDED, actor="engine")
+
+    def _execute_brownfield_implementation(
+        self,
+        workflow: Workflow,
+        node: WorkflowNode,
+        attempt: ExecutionAttempt,
+    ) -> None:
+        brownfield_context = (workflow.context or {}).get("brownfield", {})
+        proposal_agent = self.agents["brownfield_implementation"]
+        proposal = proposal_agent.execute(self._agent_input(workflow, node))
+        edits = proposal.content["patch"]
+        if brownfield_context.get("inject_failure"):
+            edits = failure_patch(edits)
+        patch_result = run_brownfield_patch(
+            self.project_root,
+            edits,
+            test_targets=[
+                "tests/test_shortener_api.py",
+                "tests/test_shortener_destination_security.py",
+            ],
+            test_runner=self.test_runner,
+        )
+        impact = brownfield_context.get("impact", {})
+        test_result = patch_result["test_result"]
+        content = {
+            "patch": edits,
+            "proposed_by": "brownfield_implementation",
+            "patch_paths": patch_result["changed_paths"],
+            "impacted_files": impact.get("impacted_files", []),
+            "affected_tests": impact.get("affected_tests", []),
+            "pytest_result": test_result,
+            "worktree_isolated": patch_result["worktree_isolated"],
+        }
+        artifact = {
+            "node_key": node.node_key,
+            "artifact_type": "brownfield_patch_report",
+            "summary": (
+                "Brownfield patch passed isolated pytest validation."
+                if patch_result["passed"]
+                else "Brownfield patch failed isolated pytest validation."
+            ),
+            "content": content,
+            "context_version": workflow.context_version + 1,
+        }
+        self._persist_result(
+            workflow,
+            node,
+            artifact,
+            proposal.decisions,
+        )
+        self._audit(
+            workflow,
+            node,
+            "patch_applied",
+            "engine",
+            payload={"paths": patch_result["changed_paths"], "worktree_isolated": True},
+        )
+        if patch_result["passed"]:
+            attempt.status = NodeStatus.SUCCEEDED.value
+            attempt.completed_at = datetime.now(UTC)
+            node.completed_at = attempt.completed_at
+            self._audit(
+                workflow,
+                node,
+                "tests_passed",
+                "engine",
+                payload={
+                    "tests_passed": test_result["tests_passed"],
+                    "tests_failed": test_result["tests_failed"],
+                },
+            )
+            self.session.commit()
+            transition_node(self.session, node, NodeStatus.SUCCEEDED, actor="engine")
+            return
+
+        reason = (
+            f"Brownfield tests failed with {test_result['tests_failed']} failing tests "
+            f"and {test_result['tests_passed']} passing tests."
+        )
+        self._audit(
+            workflow,
+            node,
+            "tests_failed",
+            "engine",
+            payload={
+                "tests_passed": test_result["tests_passed"],
+                "tests_failed": test_result["tests_failed"],
+                "reason": test_result.get("reason"),
+            },
+        )
+        self.session.commit()
+        raise BrownfieldTestFailureError(reason)
+
+    def _rollback_brownfield(self, workflow: Workflow, node: WorkflowNode, reason: str) -> None:
+        transition_node(self.session, node, NodeStatus.ROLLED_BACK, actor="recovery")
+        graph_nodes = [
+            GraphNode(key=item.node_key, dependencies=tuple(item.dependency_keys))
+            for item in self._workflow_nodes(workflow.id)
+        ]
+        later_keys = downstream_nodes(graph_nodes, {node.node_key})
+        for later_node in self._workflow_nodes(workflow.id):
+            if later_node.node_key not in later_keys:
+                continue
+            if later_node.status in {
+                NodeStatus.PENDING.value,
+                NodeStatus.READY.value,
+                NodeStatus.WAITING_FOR_APPROVAL.value,
+                NodeStatus.WAITING_FOR_INPUT.value,
+            }:
+                transition_node(self.session, later_node, NodeStatus.INVALIDATED, actor="recovery")
+            if later_node.status in {
+                NodeStatus.INVALIDATED.value,
+                NodeStatus.FAILED.value,
+                NodeStatus.SUCCEEDED.value,
+                NodeStatus.SAFE_STOPPED.value,
+            }:
+                transition_node(self.session, later_node, NodeStatus.ROLLED_BACK, actor="recovery")
+        workflow.status = WorkflowStatus.SAFE_STOPPED.value
+        workflow.safe_stop_reason = reason
+        self._audit(
+            workflow,
+            node,
+            "rollback_performed",
+            "recovery",
+            payload={
+                "reason": reason,
+                "rolled_back_node_keys": sorted(later_keys | {node.node_key}),
+            },
+        )
+        self._audit(
+            workflow,
+            node,
+            "workflow_safe_stopped",
+            "engine",
+            payload={"category": "brownfield_tests_failed", "reason": reason},
+        )
+        self.session.commit()
+
+    def _execute_validation_node(
+        self,
+        workflow: Workflow,
+        node: WorkflowNode,
+        attempt: ExecutionAttempt,
+    ) -> None:
+        command = [__import__("sys").executable, "-m", "pytest", *self.pytest_targets]
+        validate_pytest_command(command)
+        self._audit(
+            workflow,
+            node,
+            "validation_started",
+            "engine",
+            payload={"command": command, "targets": self.pytest_targets},
+        )
+        self.session.commit()
+        result = self.test_runner(
+            working_directory=self.project_root,
+            targets=self.pytest_targets,
+        )
+        validation_result = {"node_key": node.node_key, **result.to_artifact()}
+        artifact = {
+            "node_key": node.node_key,
+            "artifact_type": "validation_report",
+            "summary": self._validation_summary(result),
+            "content": validation_result,
+            "context_version": workflow.context_version + 1,
+        }
+        self._persist_result(
+            workflow,
+            node,
+            artifact,
+            [
+                {
+                    "decision": "Execute the configured pytest validation gate.",
+                    "rationale": "Release readiness depends on real passing test evidence.",
+                    "command": result.command,
+                }
+            ],
+        )
+        workflow.context = {
+            **(workflow.context or {}),
+            "validation_results": [
+                *((workflow.context or {}).get("validation_results", [])),
+                validation_result,
+            ],
+        }
+        attempt.status = NodeStatus.SUCCEEDED.value if result.passed else NodeStatus.FAILED.value
+        attempt.completed_at = datetime.now(UTC)
+        node.completed_at = attempt.completed_at
+        self._audit(
+            workflow,
+            node,
+            "validation_passed" if result.passed else "validation_failed",
+            "engine",
+            payload={
+                "tests_passed": result.tests_passed,
+                "tests_failed": result.tests_failed,
+                "reason": result.reason,
+            },
+        )
+        self.session.commit()
+        if result.passed:
+            transition_node(self.session, node, NodeStatus.SUCCEEDED, actor="engine")
+            return
+        if result.reason == "timeout":
+            raise TimeoutError("Validation timed out.")
+        raise DeterministicValidationFailureError(self._validation_failure_reason(result))
+
+    @staticmethod
+    def _validation_summary(result: PytestRunResult) -> str:
+        if result.passed:
+            return f"Pytest validation passed: {result.tests_passed} passed, 0 failed."
+        if result.reason == "timeout":
+            return "Pytest validation timed out."
+        return (
+            f"Pytest validation failed: {result.tests_passed} passed, "
+            f"{result.tests_failed} failed."
+        )
+
+    @staticmethod
+    def _validation_failure_reason(result: PytestRunResult) -> str:
+        if result.reason == "timeout":
+            return "Validation timed out."
+        return (
+            f"Validation failed with {result.tests_failed} failing tests "
+            f"and {result.tests_passed} passing tests."
+        )
 
     def _entry_gate_passes(self, workflow: Workflow, node: WorkflowNode) -> bool:
         dependency_nodes = {
@@ -346,10 +725,11 @@ class WorkflowEngine:
         reason: str,
         *,
         category: str,
+        transition_node_state: bool = True,
     ) -> None:
         node.error_message = reason
         node.completed_at = datetime.now(UTC)
-        if node.status != NodeStatus.SAFE_STOPPED.value:
+        if transition_node_state and node.status != NodeStatus.SAFE_STOPPED.value:
             transition_node(self.session, node, NodeStatus.SAFE_STOPPED, actor="engine")
         workflow.status = WorkflowStatus.SAFE_STOPPED.value
         workflow.safe_stop_reason = reason

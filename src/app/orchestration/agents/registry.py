@@ -2,6 +2,7 @@ from app.core.config import Settings, get_settings
 from app.orchestration.agents.base import DeterministicStubAgent, WorkflowAgent
 from app.orchestration.agents.deterministic import DeterministicStageAgent
 from app.orchestration.agents.requirements import build_requirements_agent
+from app.orchestration.brownfield import BrownfieldPatchProposalAgent
 
 
 def build_agent_registry(settings: Settings | None = None) -> dict[str, WorkflowAgent]:
@@ -22,4 +23,6 @@ def build_agent_registry(settings: Settings | None = None) -> dict[str, Workflow
         "validation": gate_agent,
         "release": DeterministicStageAgent("release", resolved_settings.gate_model),
         "risk_review": DeterministicStageAgent("risk_review", resolved_settings.gate_model),
+        "summary": DeterministicStageAgent("summary", resolved_settings.planning_model),
+        "brownfield_implementation": BrownfieldPatchProposalAgent(),
     }

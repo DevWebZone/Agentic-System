@@ -48,6 +48,7 @@ def to_workflow_response(workflow: Workflow) -> WorkflowResponse:
         title=workflow.title,
         original_requirement=workflow.original_requirement,
         status=workflow.status,
+        planned_by=workflow.context.get("planned_by", "client"),
         context_version=workflow.context_version,
         graph_version=workflow.graph_version,
         created_at=workflow.created_at,
@@ -262,7 +263,9 @@ def list_scenarios(runner: ScenarioRunner = Depends(get_scenario_runner)) -> lis
 
 @scenarios_router.post("/{scenario_name}/run", response_model=ScenarioRunResponse)
 def run_scenario(
-    scenario_name: str, runner: ScenarioRunner = Depends(get_scenario_runner)
+    scenario_name: str,
+    inject_failure: bool = False,
+    runner: ScenarioRunner = Depends(get_scenario_runner),
 ) -> ScenarioRunResponse:
-    workflow = runner.run(scenario_name)
+    workflow = runner.run(scenario_name, inject_failure=inject_failure)
     return ScenarioRunResponse(scenario=scenario_name, workflow=to_workflow_response(workflow))

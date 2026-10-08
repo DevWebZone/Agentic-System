@@ -11,6 +11,19 @@ class PolicyViolationError(ValueError):
     """Raised when an agent result violates a non-bypassable workflow policy."""
 
 
+def validate_pytest_command(command: str | list[str]) -> None:
+    """Allow only direct pytest invocations for validation and test-execution gates."""
+
+    if isinstance(command, str):
+        tokens = command.strip().split()
+        if not tokens or tokens[0] != "pytest":
+            raise PolicyViolationError("Agent commands are limited to direct pytest commands.")
+        return
+
+    if len(command) < 3 or command[1:3] != ["-m", "pytest"]:
+        raise PolicyViolationError("Validation commands must use 'python -m pytest'.")
+
+
 def validate_agent_result(node: WorkflowNode, content: dict[str, Any]) -> None:
     """Enforce bounded patch and command autonomy on structured agent output."""
 
@@ -28,8 +41,7 @@ def validate_agent_result(node: WorkflowNode, content: dict[str, Any]) -> None:
     if not isinstance(commands, list) or not all(isinstance(command, str) for command in commands):
         raise PolicyViolationError("commands must be a list of strings.")
     for command in commands:
-        if not command.strip().startswith("pytest"):
-            raise PolicyViolationError("Agent commands are limited to direct pytest commands.")
+        validate_pytest_command(command)
 
     if node.node_type == "release" and not validation_passed(node, content):
         raise PolicyViolationError("Release is blocked until validation reports success.")
@@ -38,9 +50,14 @@ def validate_agent_result(node: WorkflowNode, content: dict[str, Any]) -> None:
 def validation_passed(node: WorkflowNode, content: dict[str, Any]) -> bool:
     """Require validation success before a release-stage output can proceed."""
 
-    if content.get("validation_passed") is True:
-        return True
-    return any(dependency == "validation" for dependency in node.dependency_keys)
+    dependency_artifacts = content.get("dependency_artifacts", [])
+    validation_artifacts = [
+        artifact
+        for artifact in dependency_artifacts
+        if artifact.get("artifact_type") == "validation_report"
+        and artifact.get("content", {}).get("passed") is True
+    ]
+    return bool(validation_artifacts)
 
 
 def ensure_no_self_approval(requesting_actor: str, reviewer: str) -> None:
@@ -59,7 +76,7 @@ def approval_required(node: WorkflowNode) -> bool:
     return (
         node.requires_approval
         or node.node_type == "release"
-        or bool(concerns & HIGH_IMPACT_CONCERNS)
+        or (node.node_type == "implementation" and bool(concerns & HIGH_IMPACT_CONCERNS))
     )
 
 

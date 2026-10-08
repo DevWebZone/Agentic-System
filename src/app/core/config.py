@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     planning_model: str = Field(default="Sol", validation_alias="PLANNING_MODEL")
     code_model: str = Field(default="Terra", validation_alias="CODE_MODEL")
     gate_model: str = Field(default="Luna", validation_alias="GATE_MODEL")
+    pytest_gate_targets: str = Field(
+        default="tests/test_shortener_api.py", validation_alias="PYTEST_GATE_TARGETS"
+    )
 
 
 @lru_cache

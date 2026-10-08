@@ -11,6 +11,7 @@ STAGE_ARTIFACT_TYPES: Final[dict[str, str]] = {
     "validation": "validation_report",
     "release": "release_readiness_report",
     "risk_review": "risk_assessment",
+    "summary": "workflow_summary",
 }
 
 
@@ -106,6 +107,10 @@ class DeterministicStageAgent:
             "risk_review": {
                 "risks": ["API compatibility", "data migration", "security regression"],
                 "controls": ["Approval and regression tests."],
+            },
+            "summary": {
+                "artifacts": ["planning", "implementation", "validation", "release"],
+                "review": ["Summarize workflow outcomes for the reviewer."],
             },
         }
         return outputs.get(self.stage, {"work": [agent_input.node_type]})
