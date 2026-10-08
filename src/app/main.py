@@ -17,6 +17,8 @@ from app.core.errors import (
     unhandled_exception_handler,
 )
 from app.core.logging import configure_logging
+from app.orchestration.api import metrics_router
+from app.orchestration.api import router as workflows_router
 from app.shortener.api import redirect_router
 from app.shortener.api import router as links_router
 
@@ -35,6 +37,8 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(links_router)
 app.include_router(redirect_router)
+app.include_router(workflows_router)
+app.include_router(metrics_router)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 

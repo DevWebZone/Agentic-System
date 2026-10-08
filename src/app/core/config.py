@@ -17,6 +17,15 @@ class Settings(BaseSettings):
         default="sqlite:///./agentic_url_shortener.db", validation_alias="DATABASE_URL"
     )
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+    llm_requirements_enabled: bool = Field(
+        default=False, validation_alias="LLM_REQUIREMENTS_ENABLED"
+    )
+    openai_api_key: str | None = Field(default=None, validation_alias="OPENAI_API_KEY")
+    requirements_model: str = Field(default="gpt-4.1-mini", validation_alias="REQUIREMENTS_MODEL")
+    llm_max_output_tokens: int = Field(default=1200, validation_alias="LLM_MAX_OUTPUT_TOKENS")
+    planning_model: str = Field(default="Sol", validation_alias="PLANNING_MODEL")
+    code_model: str = Field(default="Terra", validation_alias="CODE_MODEL")
+    gate_model: str = Field(default="Luna", validation_alias="GATE_MODEL")
 
 
 @lru_cache
