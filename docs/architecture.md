@@ -90,7 +90,9 @@ Illegal transitions are rejected and written to the audit trail.
 
 All agents share a Pydantic input/output contract. The built-in deterministic agents cover requirements, architecture, planning, implementation, testing, documentation, validation, release, and risk review.
 
-The requirements agent can optionally call an OpenAI Responses API model with JSON-schema output. It retries malformed output twice, then falls back to deterministic analysis. The system runs without an API key by default.
+The planner is deterministic and keyword-based rather than LLM-driven. It derives concern tags and the node graph from requirement text and explicit dependency rules, then validates the graph before execution. The requirements agent is optional: it only runs when `LLM_REQUIREMENTS_ENABLED=true` and `OPENAI_API_KEY` are both configured; otherwise the code falls back to deterministic local requirements analysis.
+
+The `Sol`, `Terra`, and `Luna` values are stage-label metadata recorded in artifact content for governance and review. They are not independent routed model calls.
 
 The orchestrator, not the agents, controls:
 
@@ -108,7 +110,7 @@ The orchestrator, not the agents, controls:
 
 - Patch paths are limited to `src/app/shortener/` and `tests/`.
 - Agent commands are limited to direct `pytest` commands.
-- API, database, security, explicit, and release-impact nodes require human approval.
+- Approval gating applies to actionable execution nodes: implementation, migration, and release. Planning and design nodes do not pause for approval solely because they are high-level work.
 - A requestor or agent cannot approve its own action.
 - Release output is blocked until validation succeeds.
 
@@ -119,7 +121,11 @@ The orchestrator, not the agents, controls:
 - Deterministic fallback is recorded in execution attempts and audit events.
 - A checkpoint is created before each execution wave.
 - Logical rollback restores the latest context/artifact checkpoint and marks later successful nodes `ROLLED_BACK`.
-- The brownfield scenario additionally demonstrates a real Git rollback in an isolated temporary worktree.
+- The brownfield scenario applies and validates a hand-written patch only in an isolated temporary Git worktree; it does not merge into the active repository.
+
+## Deterministic artifact model
+
+The workflow produces reviewable artifact records for architecture, test-plan, implementation-plan, documentation, and summary stages using the deterministic stage agents in the local orchestration pipeline. These are persisted artifacts rather than LLM-generated freeform output.
 
 ## Replanning
 

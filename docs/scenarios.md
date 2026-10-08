@@ -17,7 +17,9 @@ GET  /api/v1/scenarios
 POST /api/v1/scenarios/{name}/run
 ```
 
-Each run saves its review artifact under `docs/scenario-runs/`.
+Each run saves its review artifact under `docs/scenario-runs/`. The planner is deterministic and keyword-based, and the saved scenario artifacts record `execution.source` as `deterministic`; the optional LLM requirements path was not exercised in those runs.
+
+Validation for the workflow uses real `pytest` via `PYTEST_GATE_TARGETS`. The default target is `tests/test_shortener_api.py`, and the setting may be overridden with a comma-separated list of targets.
 
 ## 1. Greenfield: design and validation over the baseline
 
@@ -67,7 +69,7 @@ architecture --------> validation
 2. The scenario creates an isolated temporary Git worktree from the Phase 2 baseline commit `9966dcc`.
 3. It intentionally adds a failing test and runs focused URL-shortener tests.
 4. It runs `git reset --hard HEAD` and `git clean -fd` inside the temporary worktree to demonstrate rollback.
-5. It applies a reviewed patch that introduces `record_click_safely()`.
+5. It applies a hand-written, reviewed patch that introduces `record_click_safely()` but does not merge it into the active repository.
 6. The patch catches analytics persistence failures, rolls back the failed database transaction, logs the failure, and preserves the redirect response.
 7. It adds a regression test proving that redirect remains HTTP 307 when analytics recording fails.
 8. It runs focused tests again and records the passing output and diff.

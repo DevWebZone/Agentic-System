@@ -20,11 +20,19 @@ The repository contains a runnable URL shortener and a governed agentic SDLC orc
 - expiration and disabled-link handling
 - explicit persisted workflow dependency graphs
 - sequential and wave-based parallel execution with synchronization
-- deterministic lifecycle agents and optional LLM requirements analysis
+- deterministic keyword-based planning and lifecycle agents, with an optional LLM requirements analysis path
 - entry/exit gates, policy checks, human approvals, clarification pauses, retries, fallback, safe-stop, and rollback
 - requirement revision with selective downstream invalidation and renewed approvals
 - audit timeline, final engineering summary, and reliability metrics
 - greenfield, brownfield, and ambiguous scenarios
+
+Planner and validation notes:
+
+- The planner is deterministic and keyword-based: it inspects requirement text for concern tags such as `api`, `database`, `security`, `analytics`, `testing`, and `docs`, then builds the graph from explicit dependency rules. It is not LLM-driven.
+- The optional requirements agent only runs when `LLM_REQUIREMENTS_ENABLED=true` and `OPENAI_API_KEY` are both set. Otherwise the system falls back to the deterministic local requirements analyzer.
+- `Sol`, `Terra`, and `Luna` are recorded stage labels in generated artifacts for governance and review; they are not routed model calls.
+- Validation runs real `pytest` against `PYTEST_GATE_TARGETS`. The default target is `tests/test_shortener_api.py`, and the setting accepts a comma-separated list of targets.
+- Generated architecture, test-plan, implementation-plan, documentation, and summary artifacts are deterministic agent outputs from the local orchestration pipeline.
 
 Read the reviewer-facing documents:
 
