@@ -1,0 +1,702 @@
+{
+  "workflow": {
+    "id": 1,
+    "title": "Greenfield URL-shortener design and validation",
+    "status": "WAITING_FOR_APPROVAL",
+    "planned_by": "planner",
+    "requirement_version": 1,
+    "graph_version": 1,
+    "context_version": 10,
+    "original_requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+    "normalized_requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation."
+  },
+  "plan_and_rationale": [
+    {
+      "decision": "graph planned",
+      "rationale": {
+        "detected_concerns": [
+          "api",
+          "analytics",
+          "testing",
+          "docs"
+        ],
+        "included_nodes": [
+          {
+            "node_key": "requirements",
+            "node_type": "requirements",
+            "requires_approval": false,
+            "dependency_keys": [],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Capture the original requirement."
+          },
+          {
+            "node_key": "ambiguity-check",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "requirements"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Review the normalized requirement for ambiguity before design proceeds."
+          },
+          {
+            "node_key": "architecture",
+            "node_type": "architecture",
+            "requires_approval": false,
+            "dependency_keys": [
+              "ambiguity-check"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Establish the design boundary for the requested concerns."
+          },
+          {
+            "node_key": "task-decomposition",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "architecture"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Break the change into governed execution stages."
+          },
+          {
+            "node_key": "risk-review",
+            "node_type": "risk_review",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api"
+            ],
+            "reason": "Security, API, or database concerns require explicit risk review."
+          },
+          {
+            "node_key": "test-plan",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Testing is always required before implementation."
+          },
+          {
+            "node_key": "implementation-plan",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation planning is always required before changes are proposed."
+          },
+          {
+            "node_key": "analytics-impact",
+            "node_type": "architecture",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "analytics"
+            ],
+            "reason": "Analytics requirements need an explicit impact review."
+          },
+          {
+            "node_key": "plan-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-plan",
+              "implementation-plan",
+              "risk-review",
+              "analytics-impact"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Synchronize the planning branch before approval or implementation work."
+          },
+          {
+            "node_key": "implementation-approval",
+            "node_type": "planning",
+            "requires_approval": true,
+            "dependency_keys": [
+              "plan-sync"
+            ],
+            "concern_tags": [
+              "api"
+            ],
+            "reason": "Pause for approval when the planned implementation touches high-impact concerns."
+          },
+          {
+            "node_key": "implementation",
+            "node_type": "implementation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation follows the approved plan."
+          },
+          {
+            "node_key": "test-execution",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Execute tests after implementation is available."
+          },
+          {
+            "node_key": "documentation",
+            "node_type": "documentation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "docs"
+            ],
+            "reason": "Documentation always runs in parallel with test execution."
+          },
+          {
+            "node_key": "validation-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-execution",
+              "documentation"
+            ],
+            "concern_tags": [
+              "testing",
+              "docs"
+            ],
+            "reason": "Join documentation and test execution before final validation."
+          },
+          {
+            "node_key": "validation",
+            "node_type": "validation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "validation-sync"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Validation is the final automated gate before release approval."
+          },
+          {
+            "node_key": "release-approval",
+            "node_type": "release",
+            "requires_approval": true,
+            "dependency_keys": [
+              "validation"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Release always requires approval after validation passes."
+          },
+          {
+            "node_key": "final-summary",
+            "node_type": "summary",
+            "requires_approval": false,
+            "dependency_keys": [
+              "release-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "analytics",
+              "testing",
+              "docs"
+            ],
+            "reason": "Summarize the workflow after release approval."
+          }
+        ],
+        "excluded_nodes": [
+          {
+            "node_key": "migration-review",
+            "reason": "No database concern was detected."
+          }
+        ]
+      },
+      "actor": "planner",
+      "detected_concerns": [
+        "api",
+        "analytics",
+        "testing",
+        "docs"
+      ],
+      "context_version": 1
+    },
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 3
+    },
+    {
+      "decision": "Route architecture work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 4
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 5
+    },
+    {
+      "decision": "Route risk_review work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 6
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 7
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 8
+    },
+    {
+      "decision": "Route architecture work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 9
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 10
+    }
+  ],
+  "artifacts": [
+    {
+      "node_key": "requirements",
+      "artifact_type": "requirements_analysis",
+      "summary": "Normalized the engineering requirement and identified clarification needs.",
+      "content": {
+        "normalized_requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "ambiguities": [],
+        "clarification_questions": [],
+        "acceptance_criteria": [
+          "The requirement is represented by reviewable engineering artifacts.",
+          "Required validation and governance gates are recorded before release readiness."
+        ],
+        "assumptions": [
+          "Existing URL-shortener API compatibility remains required unless approved otherwise."
+        ],
+        "risks": [],
+        "execution": {
+          "source": "deterministic"
+        }
+      },
+      "context_version": 2
+    },
+    {
+      "node_key": "ambiguity-check",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'ambiguity-check'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "requirements"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 3
+    },
+    {
+      "node_key": "architecture",
+      "artifact_type": "architecture_overview",
+      "summary": "Produced a architecture_overview for 'architecture'.",
+      "content": {
+        "stage": "architecture",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "ambiguity-check"
+        ],
+        "output": {
+          "components": [
+            "API",
+            "service layer",
+            "repository",
+            "database"
+          ],
+          "decisions": [
+            "Preserve modular boundaries and migration-controlled persistence."
+          ]
+        }
+      },
+      "context_version": 4
+    },
+    {
+      "node_key": "task-decomposition",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'task-decomposition'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "architecture"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 5
+    },
+    {
+      "node_key": "risk-review",
+      "artifact_type": "risk_assessment",
+      "summary": "Produced a risk_assessment for 'risk-review'.",
+      "content": {
+        "stage": "risk_review",
+        "model_route": "Luna",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "risks": [
+            "API compatibility",
+            "data migration",
+            "security regression"
+          ],
+          "controls": [
+            "Approval and regression tests."
+          ]
+        }
+      },
+      "context_version": 6
+    },
+    {
+      "node_key": "test-plan",
+      "artifact_type": "test_plan",
+      "summary": "Produced a test_plan for 'test-plan'.",
+      "content": {
+        "stage": "testing",
+        "model_route": "Luna",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "tests": [
+            "unit",
+            "integration",
+            "regression"
+          ],
+          "acceptance": [
+            "Required tests must pass before release."
+          ]
+        }
+      },
+      "context_version": 7
+    },
+    {
+      "node_key": "implementation-plan",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'implementation-plan'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 8
+    },
+    {
+      "node_key": "analytics-impact",
+      "artifact_type": "architecture_overview",
+      "summary": "Produced a architecture_overview for 'analytics-impact'.",
+      "content": {
+        "stage": "architecture",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "components": [
+            "API",
+            "service layer",
+            "repository",
+            "database"
+          ],
+          "decisions": [
+            "Preserve modular boundaries and migration-controlled persistence."
+          ]
+        }
+      },
+      "context_version": 9
+    },
+    {
+      "node_key": "plan-sync",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'plan-sync'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.",
+        "dependency_nodes": [
+          "risk-review",
+          "test-plan",
+          "implementation-plan",
+          "analytics-impact"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 10
+    },
+    {
+      "node_key": "scenario",
+      "artifact_type": "scenario_definition",
+      "summary": "Design-and-validation pass over the existing Phase 2 URL-shortener baseline.",
+      "content": {
+        "name": "greenfield",
+        "label": "design_and_validation_over_phase_2_baseline"
+      },
+      "context_version": 10
+    }
+  ],
+  "assumptions": [
+    "Existing URL-shortener API compatibility remains required unless approved otherwise."
+  ],
+  "risks": [],
+  "approvals": [
+    {
+      "id": 1,
+      "node_id": 10,
+      "status": "PENDING",
+      "reviewer": null,
+      "comments": null
+    }
+  ],
+  "validation_results": [],
+  "node_outcomes": [
+    {
+      "node_key": "requirements",
+      "node_type": "requirements",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "ambiguity-check",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "architecture",
+      "node_type": "architecture",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "task-decomposition",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "risk-review",
+      "node_type": "risk_review",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "test-plan",
+      "node_type": "testing",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-plan",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "analytics-impact",
+      "node_type": "architecture",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "plan-sync",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-approval",
+      "node_type": "planning",
+      "status": "WAITING_FOR_APPROVAL",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation",
+      "node_type": "implementation",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "test-execution",
+      "node_type": "testing",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "documentation",
+      "node_type": "documentation",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "validation-sync",
+      "node_type": "planning",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "validation",
+      "node_type": "validation",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "release-approval",
+      "node_type": "release",
+      "status": "PENDING",
+      "error_message": null
+    },
+    {
+      "node_key": "final-summary",
+      "node_type": "summary",
+      "status": "PENDING",
+      "error_message": null
+    }
+  ],
+  "release_readiness": {
+    "status": "not_ready",
+    "safe_stop_reason": null
+  },
+  "scenario": "greenfield",
+  "node_statuses": {
+    "requirements": "SUCCEEDED",
+    "ambiguity-check": "SUCCEEDED",
+    "architecture": "SUCCEEDED",
+    "task-decomposition": "SUCCEEDED",
+    "risk-review": "SUCCEEDED",
+    "test-plan": "SUCCEEDED",
+    "implementation-plan": "SUCCEEDED",
+    "analytics-impact": "SUCCEEDED",
+    "plan-sync": "SUCCEEDED",
+    "implementation-approval": "WAITING_FOR_APPROVAL",
+    "implementation": "PENDING",
+    "test-execution": "PENDING",
+    "documentation": "PENDING",
+    "validation-sync": "PENDING",
+    "validation": "PENDING",
+    "release-approval": "PENDING",
+    "final-summary": "PENDING"
+  }
+}

@@ -83,11 +83,16 @@ def approval_required(node: WorkflowNode) -> bool:
 def risk_level_for(concern_tags: list[str], node_type: str) -> str:
     """Assign the risk label persisted with node metadata and reviewer requests."""
 
+    if node_type in {"planning", "summary"}:
+        return "LOW"
+    if node_type in {"implementation", "release"}:
+        return "HIGH"
+
     concerns = set(concern_tags)
     if node_type == "release" or "security" in concerns:
         return "HIGH"
     if concerns & {"api", "database"}:
         return "HIGH"
-    if node_type in {"implementation", "risk_review", "validation"}:
+    if node_type in {"risk_review", "validation"}:
         return "MEDIUM"
     return "LOW"

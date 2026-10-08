@@ -13,6 +13,7 @@ from app.orchestration.models import (
     WorkflowNode,
     WorkflowStatus,
 )
+from app.orchestration.planner import detect_concerns
 from app.orchestration.policies import ensure_no_self_approval
 from app.orchestration.transitions import transition_node
 
@@ -186,8 +187,23 @@ def revise_requirement(
             .order_by(WorkflowNode.id)
         )
     )
+    planned_concerns = (workflow.context or {}).get("planned_concerns")
+    if planned_concerns is None:
+        planned_concerns = next(
+            (
+                decision.get("detected_concerns", [])
+                for decision in workflow.decisions or []
+                if decision.get("decision") == "graph planned"
+            ),
+            None,
+        )
+    planning_concern_set = set(planned_concerns or [])
     concern_affected = {
-        node.node_key for node in nodes if set(node.concern_tags or []) & normalized_concerns
+        node.node_key
+        for node in nodes
+        if node.node_type != "requirements"
+        and set(node.concern_tags or []) != planning_concern_set
+        and set(node.concern_tags or []) & normalized_concerns
     }
     graph_nodes = [
         GraphNode(key=node.node_key, dependencies=tuple(node.dependency_keys), status=node.status)
@@ -198,15 +214,7 @@ def revise_requirement(
         requirements_keys | concern_affected | downstream_nodes(graph_nodes, concern_affected)
     )
 
-    for node in nodes:
-        if node.node_key not in affected_keys:
-            continue
-        if node.status != NodeStatus.INVALIDATED.value:
-            transition_node(session, node, NodeStatus.INVALIDATED, actor=actor)
-        transition_node(session, node, NodeStatus.PENDING, actor=actor)
-        node.output_artifact = None
-        node.error_message = None
-        _invalidate_prior_approvals(session, node)
+    _reset_nodes(session, nodes, affected_keys, actor=actor)
 
     workflow.original_requirement = requirement
     workflow.normalized_requirement = None
@@ -223,6 +231,8 @@ def revise_requirement(
         "requirement": requirement,
         "execution_waves": [],
         "changed_concerns": sorted(normalized_concerns),
+        "planned_concerns": planned_concerns,
+        "replan_concern_baseline": planned_concerns,
     }
     workflow.decisions = [
         *(workflow.decisions or []),
@@ -251,6 +261,79 @@ def revise_requirement(
     )
     session.commit()
     return workflow
+
+
+def reconcile_requirement_concerns(session: Session, workflow: Workflow) -> None:
+    """Invalidate all requirement dependents only when re-normalization changes planner concerns."""
+
+    context = workflow.context or {}
+    baseline = context.get("replan_concern_baseline")
+    if baseline is None or not workflow.normalized_requirement:
+        return
+
+    normalized_concerns = detect_concerns(workflow.normalized_requirement)
+    workflow.context = {
+        **context,
+        "planned_concerns": normalized_concerns,
+    }
+    workflow.context.pop("replan_concern_baseline", None)
+    if set(baseline) == set(normalized_concerns):
+        session.commit()
+        return
+
+    nodes = list(
+        session.scalars(
+            select(WorkflowNode)
+            .where(WorkflowNode.workflow_id == workflow.id)
+            .order_by(WorkflowNode.id)
+        )
+    )
+    graph_nodes = [
+        GraphNode(key=node.node_key, dependencies=tuple(node.dependency_keys)) for node in nodes
+    ]
+    requirements_keys = {node.node_key for node in nodes if node.node_type == "requirements"}
+    affected_keys = downstream_nodes(graph_nodes, requirements_keys)
+    _reset_nodes(session, nodes, affected_keys, actor="governance")
+    workflow.artifacts = [
+        artifact
+        for artifact in workflow.artifacts or []
+        if artifact.get("node_key") not in affected_keys
+    ]
+    workflow.context = {
+        key: value for key, value in workflow.context.items() if key not in affected_keys
+    }
+    session.add(
+        AuditEvent(
+            workflow_id=workflow.id,
+            actor="governance",
+            event_type="requirement_concerns_changed",
+            payload={
+                "previous_concerns": sorted(baseline),
+                "normalized_concerns": sorted(normalized_concerns),
+                "affected_node_keys": sorted(affected_keys),
+            },
+        )
+    )
+    session.commit()
+
+
+def _reset_nodes(
+    session: Session,
+    nodes: list[WorkflowNode],
+    node_keys: set[str],
+    *,
+    actor: str,
+) -> None:
+    for node in nodes:
+        if node.node_key not in node_keys:
+            continue
+        if node.status != NodeStatus.PENDING.value:
+            if node.status != NodeStatus.INVALIDATED.value:
+                transition_node(session, node, NodeStatus.INVALIDATED, actor=actor)
+            transition_node(session, node, NodeStatus.PENDING, actor=actor)
+        node.output_artifact = None
+        node.error_message = None
+        _invalidate_prior_approvals(session, node)
 
 
 def _approval_node(session: Session, approval: Approval) -> WorkflowNode:

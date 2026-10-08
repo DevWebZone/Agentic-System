@@ -2,7 +2,13 @@ from sqlalchemy import delete, select
 
 from app.core.database import SessionLocal
 from app.orchestration.engine import WorkflowEngine
-from app.orchestration.governance import add_clarification, approve, reject, revise_requirement
+from app.orchestration.governance import (
+    add_clarification,
+    approve,
+    reconcile_requirement_concerns,
+    reject,
+    revise_requirement,
+)
 from app.orchestration.models import (
     Approval,
     AuditEvent,
@@ -185,3 +191,36 @@ def test_concern_replan_invalidates_only_affected_nodes_and_descendants() -> Non
         )
         waiting, _, _ = engine.run(replanned.id)
         assert waiting.status == WorkflowStatus.WAITING_FOR_APPROVAL.value
+
+
+def test_changed_normalized_concerns_invalidate_planner_dependents() -> None:
+    clear_workflows()
+    with SessionLocal() as session:
+        engine = WorkflowEngine(session)
+        workflow = engine.create_workflow(
+            CreateWorkflowRequest(
+                title="Concern change replan test",
+                requirement="Add a redirect API endpoint, tests, and documentation.",
+            )
+        )
+        for node in workflow.nodes:
+            node.status = NodeStatus.SUCCEEDED.value
+        session.commit()
+
+        replanned = revise_requirement(
+            session,
+            workflow,
+            requirement="Refresh the developer guide only.",
+            changed_concerns=["docs"],
+            actor="reviewer",
+            reason="Check the normalized concern set before invalidating the plan.",
+        )
+        replanned.normalized_requirement = "Refresh the developer guide only."
+        session.commit()
+
+        reconcile_requirement_concerns(session, replanned)
+        nodes = {node.node_key: node for node in replanned.nodes}
+
+        assert nodes["requirements"].status == NodeStatus.PENDING.value
+        assert nodes["implementation"].status == NodeStatus.PENDING.value
+        assert nodes["test-plan"].status == NodeStatus.PENDING.value

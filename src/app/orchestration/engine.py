@@ -15,7 +15,11 @@ from app.orchestration.brownfield import (
     failure_patch,
     run_brownfield_patch,
 )
-from app.orchestration.governance import has_valid_approval, request_approval
+from app.orchestration.governance import (
+    has_valid_approval,
+    reconcile_requirement_concerns,
+    request_approval,
+)
 from app.orchestration.graph import GraphNode, downstream_nodes, ready_nodes, validate_graph
 from app.orchestration.models import (
     AuditEvent,
@@ -311,6 +315,7 @@ class WorkflowEngine:
                 return
             if node.node_type == "requirements":
                 workflow.normalized_requirement = result.content.get("normalized_requirement")
+                reconcile_requirement_concerns(self.session, workflow)
             attempt.status = NodeStatus.SUCCEEDED.value
             attempt.fallback_used = self._is_fallback_result(result.content)
             attempt.completed_at = datetime.now(UTC)

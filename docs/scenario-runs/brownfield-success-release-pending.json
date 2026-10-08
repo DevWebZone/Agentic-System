@@ -1,0 +1,912 @@
+{
+  "workflow": {
+    "id": 2,
+    "title": "Brownfield destination-host security improvement",
+    "status": "WAITING_FOR_APPROVAL",
+    "planned_by": "planner",
+    "requirement_version": 1,
+    "graph_version": 1,
+    "context_version": 15,
+    "original_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+    "normalized_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes."
+  },
+  "plan_and_rationale": [
+    {
+      "decision": "graph planned",
+      "rationale": {
+        "detected_concerns": [
+          "api",
+          "security",
+          "testing",
+          "docs"
+        ],
+        "included_nodes": [
+          {
+            "node_key": "requirements",
+            "node_type": "requirements",
+            "requires_approval": false,
+            "dependency_keys": [],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Capture the original requirement."
+          },
+          {
+            "node_key": "ambiguity-check",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "requirements"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Review the normalized requirement for ambiguity before design proceeds."
+          },
+          {
+            "node_key": "architecture",
+            "node_type": "architecture",
+            "requires_approval": false,
+            "dependency_keys": [
+              "ambiguity-check"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Establish the design boundary for the requested concerns."
+          },
+          {
+            "node_key": "task-decomposition",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "architecture"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Break the change into governed execution stages."
+          },
+          {
+            "node_key": "risk-review",
+            "node_type": "risk_review",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api",
+              "security"
+            ],
+            "reason": "Security, API, or database concerns require explicit risk review."
+          },
+          {
+            "node_key": "test-plan",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Testing is always required before implementation."
+          },
+          {
+            "node_key": "implementation-plan",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "task-decomposition"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation planning is always required before changes are proposed."
+          },
+          {
+            "node_key": "plan-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-plan",
+              "implementation-plan",
+              "risk-review"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Synchronize the planning branch before approval or implementation work."
+          },
+          {
+            "node_key": "implementation-approval",
+            "node_type": "planning",
+            "requires_approval": true,
+            "dependency_keys": [
+              "plan-sync"
+            ],
+            "concern_tags": [
+              "api",
+              "security"
+            ],
+            "reason": "Pause for approval when the planned implementation touches high-impact concerns."
+          },
+          {
+            "node_key": "implementation",
+            "node_type": "implementation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Implementation follows the approved plan."
+          },
+          {
+            "node_key": "test-execution",
+            "node_type": "testing",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Execute tests after implementation is available."
+          },
+          {
+            "node_key": "documentation",
+            "node_type": "documentation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "implementation"
+            ],
+            "concern_tags": [
+              "docs"
+            ],
+            "reason": "Documentation always runs in parallel with test execution."
+          },
+          {
+            "node_key": "validation-sync",
+            "node_type": "planning",
+            "requires_approval": false,
+            "dependency_keys": [
+              "test-execution",
+              "documentation"
+            ],
+            "concern_tags": [
+              "testing",
+              "docs"
+            ],
+            "reason": "Join documentation and test execution before final validation."
+          },
+          {
+            "node_key": "validation",
+            "node_type": "validation",
+            "requires_approval": false,
+            "dependency_keys": [
+              "validation-sync"
+            ],
+            "concern_tags": [
+              "testing"
+            ],
+            "reason": "Validation is the final automated gate before release approval."
+          },
+          {
+            "node_key": "release-approval",
+            "node_type": "release",
+            "requires_approval": true,
+            "dependency_keys": [
+              "validation"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Release always requires approval after validation passes."
+          },
+          {
+            "node_key": "final-summary",
+            "node_type": "summary",
+            "requires_approval": false,
+            "dependency_keys": [
+              "release-approval"
+            ],
+            "concern_tags": [
+              "api",
+              "security",
+              "testing",
+              "docs"
+            ],
+            "reason": "Summarize the workflow after release approval."
+          }
+        ],
+        "excluded_nodes": [
+          {
+            "node_key": "migration-review",
+            "reason": "No database concern was detected."
+          },
+          {
+            "node_key": "analytics-impact",
+            "reason": "No analytics concern was detected."
+          }
+        ]
+      },
+      "actor": "planner",
+      "detected_concerns": [
+        "api",
+        "security",
+        "testing",
+        "docs"
+      ],
+      "context_version": 1
+    },
+    {
+      "decision": "Use deterministic requirement analysis.",
+      "rationale": "No enabled LLM response passed schema validation.",
+      "context_version": 2
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 3
+    },
+    {
+      "decision": "Route architecture work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 4
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 5
+    },
+    {
+      "decision": "Route risk_review work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 6
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 7
+    },
+    {
+      "decision": "Use the real shortener impact scan for the brownfield plan.",
+      "rationale": "The affected files and tests are derived from current source references.",
+      "context_version": 8
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 9
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 10
+    },
+    {
+      "decision": "Propose the scenario's reviewed destination-host patch.",
+      "rationale": "The patch is a fixed hand-written scenario artifact, not generated code.",
+      "context_version": 11
+    },
+    {
+      "decision": "Route testing work through Luna.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 12
+    },
+    {
+      "decision": "Route documentation work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 13
+    },
+    {
+      "decision": "Route planning work through Sol.",
+      "rationale": "Stage routing is explicit even when deterministic execution is active.",
+      "context_version": 14
+    },
+    {
+      "decision": "Execute the configured pytest validation gate.",
+      "rationale": "Release readiness depends on real passing test evidence.",
+      "command": [
+        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-m",
+        "pytest",
+        "tests/test_shortener_api.py"
+      ],
+      "context_version": 15
+    }
+  ],
+  "artifacts": [
+    {
+      "node_key": "requirements",
+      "artifact_type": "requirements_analysis",
+      "summary": "Normalized the engineering requirement and identified clarification needs.",
+      "content": {
+        "normalized_requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "ambiguities": [],
+        "clarification_questions": [],
+        "acceptance_criteria": [
+          "The requirement is represented by reviewable engineering artifacts.",
+          "Required validation and governance gates are recorded before release readiness."
+        ],
+        "assumptions": [
+          "Existing URL-shortener API compatibility remains required unless approved otherwise."
+        ],
+        "risks": [],
+        "execution": {
+          "source": "deterministic"
+        }
+      },
+      "context_version": 2
+    },
+    {
+      "node_key": "ambiguity-check",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'ambiguity-check'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "requirements"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 3
+    },
+    {
+      "node_key": "architecture",
+      "artifact_type": "architecture_overview",
+      "summary": "Produced a architecture_overview for 'architecture'.",
+      "content": {
+        "stage": "architecture",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "ambiguity-check"
+        ],
+        "output": {
+          "components": [
+            "API",
+            "service layer",
+            "repository",
+            "database"
+          ],
+          "decisions": [
+            "Preserve modular boundaries and migration-controlled persistence."
+          ]
+        }
+      },
+      "context_version": 4
+    },
+    {
+      "node_key": "task-decomposition",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'task-decomposition'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "architecture"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 5
+    },
+    {
+      "node_key": "risk-review",
+      "artifact_type": "risk_assessment",
+      "summary": "Produced a risk_assessment for 'risk-review'.",
+      "content": {
+        "stage": "risk_review",
+        "model_route": "Luna",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "risks": [
+            "API compatibility",
+            "data migration",
+            "security regression"
+          ],
+          "controls": [
+            "Approval and regression tests."
+          ]
+        }
+      },
+      "context_version": 6
+    },
+    {
+      "node_key": "test-plan",
+      "artifact_type": "test_plan",
+      "summary": "Produced a test_plan for 'test-plan'.",
+      "content": {
+        "stage": "testing",
+        "model_route": "Luna",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "task-decomposition"
+        ],
+        "output": {
+          "tests": [
+            "unit",
+            "integration",
+            "regression"
+          ],
+          "acceptance": [
+            "Required tests must pass before release."
+          ]
+        }
+      },
+      "context_version": 7
+    },
+    {
+      "node_key": "implementation-plan",
+      "artifact_type": "implementation_plan",
+      "summary": "Scanned the shortener and tests for references to destination validation.",
+      "content": {
+        "stage": "implementation",
+        "impacted_files": [
+          "src/app/shortener/api.py",
+          "src/app/shortener/models.py",
+          "src/app/shortener/schemas.py",
+          "src/app/shortener/service.py",
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_api.py"
+        ],
+        "affected_tests": [
+          "tests/test_shortener_api.py"
+        ]
+      },
+      "context_version": 8
+    },
+    {
+      "node_key": "plan-sync",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'plan-sync'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "risk-review",
+          "test-plan",
+          "implementation-plan"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 9
+    },
+    {
+      "node_key": "implementation-approval",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'implementation-approval'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "plan-sync"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 10
+    },
+    {
+      "node_key": "implementation",
+      "artifact_type": "brownfield_patch_report",
+      "summary": "Brownfield patch passed isolated pytest validation.",
+      "content": {
+        "patch": [
+          {
+            "op": "replace",
+            "path": "src/app/shortener/validation.py",
+            "old_text": "import re\n",
+            "new_text": "import ipaddress\nimport re\n"
+          },
+          {
+            "op": "replace",
+            "path": "src/app/shortener/validation.py",
+            "old_text": "    if parsed.username or parsed.password:\n        raise ValueError(\"original_url must not contain embedded credentials.\")\n    return urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path, parsed.query, \"\"))\n",
+            "new_text": "    if parsed.username or parsed.password:\n        raise ValueError(\"original_url must not contain embedded credentials.\")\n    host = (parsed.hostname or \"\").rstrip(\".\").lower()\n    if host == \"localhost\" or host.endswith(\".localhost\"):\n        raise ValueError(\n            \"original_url must not point to a local or private network host.\"\n        )\n    try:\n        address = ipaddress.ip_address(host)\n    except ValueError:\n        address = None\n    if address is not None and (\n        address.is_loopback or address.is_private or address.is_link_local\n    ):\n        raise ValueError(\n            \"original_url must not point to a local or private network host.\"\n        )\n    return urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path, parsed.query, \"\"))\n"
+          },
+          {
+            "op": "create",
+            "path": "tests/test_shortener_destination_security.py",
+            "old_text": "",
+            "new_text": "from fastapi.testclient import TestClient\nimport pytest\n\nfrom app.shortener.validation import normalize_destination_url\n\n\n@pytest.mark.parametrize(\n    \"url\",\n    [\n        \"http://localhost/private\",\n        \"http://127.0.0.1/private\",\n        \"http://10.2.3.4/private\",\n        \"http://172.16.1.2/private\",\n        \"http://192.168.1.2/private\",\n        \"http://169.254.1.2/private\",\n        \"http://[::1]/private\",\n    ],\n)\ndef test_local_and_private_destination_hosts_are_rejected(url: str) -> None:\n    with pytest.raises(ValueError, match=\"local or private network\"):\n        normalize_destination_url(url)\n\n\ndef test_public_destination_remains_accepted() -> None:\n    assert normalize_destination_url(\"https://example.com/path\") == \"https://example.com/path\"\n\n\ndef test_local_destination_preserves_validation_error_shape(\n    client: TestClient,\n) -> None:\n    response = client.post(\n        \"/api/v1/links\",\n        json={\"original_url\": \"http://localhost/private\"},\n    )\n\n    assert response.status_code == 422\n    assert set(response.json()) == {\"error\", \"detail\", \"request_id\"}\n"
+          }
+        ],
+        "proposed_by": "brownfield_implementation",
+        "patch_paths": [
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_destination_security.py"
+        ],
+        "impacted_files": [
+          "src/app/shortener/api.py",
+          "src/app/shortener/models.py",
+          "src/app/shortener/schemas.py",
+          "src/app/shortener/service.py",
+          "src/app/shortener/validation.py",
+          "tests/test_shortener_api.py"
+        ],
+        "affected_tests": [
+          "tests/test_shortener_api.py"
+        ],
+        "pytest_result": {
+          "passed": true,
+          "exit_code": 0,
+          "tests_passed": 14,
+          "tests_failed": 0,
+          "duration_seconds": 6.843,
+          "output_tail": [
+            "..............                                                           [100%]",
+            "14 passed in 0.52s"
+          ],
+          "command": [
+            "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "-m",
+            "pytest",
+            "tests/test_shortener_api.py",
+            "tests/test_shortener_destination_security.py"
+          ],
+          "reason": null
+        },
+        "worktree_isolated": true
+      },
+      "context_version": 11
+    },
+    {
+      "node_key": "test-execution",
+      "artifact_type": "test_plan",
+      "summary": "Produced a test_plan for 'test-execution'.",
+      "content": {
+        "stage": "testing",
+        "model_route": "Luna",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "implementation"
+        ],
+        "output": {
+          "tests": [
+            "unit",
+            "integration",
+            "regression"
+          ],
+          "acceptance": [
+            "Required tests must pass before release."
+          ]
+        }
+      },
+      "context_version": 12
+    },
+    {
+      "node_key": "documentation",
+      "artifact_type": "documentation_plan",
+      "summary": "Produced a documentation_plan for 'documentation'.",
+      "content": {
+        "stage": "documentation",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "implementation"
+        ],
+        "output": {
+          "documents": [
+            "API contract",
+            "architecture",
+            "trade-offs"
+          ],
+          "audience": [
+            "reviewer",
+            "maintainer"
+          ]
+        }
+      },
+      "context_version": 13
+    },
+    {
+      "node_key": "validation-sync",
+      "artifact_type": "task_decomposition",
+      "summary": "Produced a task_decomposition for 'validation-sync'.",
+      "content": {
+        "stage": "planning",
+        "model_route": "Sol",
+        "requirement": "Reject link destinations that point to localhost or private network addresses so the shortener cannot be used to probe internal hosts, without changing existing API response shapes.",
+        "dependency_nodes": [
+          "test-execution",
+          "documentation"
+        ],
+        "output": {
+          "tasks": [
+            "Design",
+            "implement",
+            "test",
+            "document",
+            "validate"
+          ],
+          "dependencies": [
+            "Validation depends on implementation and testing."
+          ]
+        }
+      },
+      "context_version": 14
+    },
+    {
+      "node_key": "validation",
+      "artifact_type": "validation_report",
+      "summary": "Pytest validation passed: 5 passed, 0 failed.",
+      "content": {
+        "node_key": "validation",
+        "passed": true,
+        "exit_code": 0,
+        "tests_passed": 5,
+        "tests_failed": 0,
+        "duration_seconds": 6.767,
+        "output_tail": [
+          ".....                                                                    [100%]",
+          "5 passed in 0.83s"
+        ],
+        "command": [
+          "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+          "-m",
+          "pytest",
+          "tests/test_shortener_api.py"
+        ],
+        "reason": null
+      },
+      "context_version": 15
+    },
+    {
+      "node_key": "scenario",
+      "artifact_type": "scenario_definition",
+      "summary": "Analyzes the shortener, applies a fixed security patch in an isolated Git worktree, and runs tests.",
+      "content": {
+        "name": "brownfield",
+        "label": "runnable_scenario"
+      },
+      "context_version": 15
+    }
+  ],
+  "assumptions": [
+    "Existing URL-shortener API compatibility remains required unless approved otherwise."
+  ],
+  "risks": [],
+  "approvals": [
+    {
+      "id": 2,
+      "node_id": 26,
+      "status": "APPROVED",
+      "reviewer": "scenario-reviewer",
+      "comments": "Approve the isolated brownfield patch demonstration."
+    },
+    {
+      "id": 3,
+      "node_id": 27,
+      "status": "APPROVED",
+      "reviewer": "scenario-reviewer",
+      "comments": "Approve the isolated brownfield patch demonstration."
+    },
+    {
+      "id": 4,
+      "node_id": 32,
+      "status": "PENDING",
+      "reviewer": null,
+      "comments": null
+    }
+  ],
+  "validation_results": [
+    {
+      "node_key": "validation",
+      "passed": true,
+      "exit_code": 0,
+      "tests_passed": 5,
+      "tests_failed": 0,
+      "duration_seconds": 6.767,
+      "output_tail": [
+        ".....                                                                    [100%]",
+        "5 passed in 0.83s"
+      ],
+      "command": [
+        "c:\\Users\\asus\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "-m",
+        "pytest",
+        "tests/test_shortener_api.py"
+      ],
+      "reason": null
+    }
+  ],
+  "node_outcomes": [
+    {
+      "node_key": "requirements",
+      "node_type": "requirements",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "ambiguity-check",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "architecture",
+      "node_type": "architecture",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "task-decomposition",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "risk-review",
+      "node_type": "risk_review",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "test-plan",
+      "node_type": "testing",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-plan",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "plan-sync",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation-approval",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "implementation",
+      "node_type": "implementation",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "test-execution",
+      "node_type": "testing",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "documentation",
+      "node_type": "documentation",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "validation-sync",
+      "node_type": "planning",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "validation",
+      "node_type": "validation",
+      "status": "SUCCEEDED",
+      "error_message": null
+    },
+    {
+      "node_key": "release-approval",
+      "node_type": "release",
+      "status": "WAITING_FOR_APPROVAL",
+      "error_message": null
+    },
+    {
+      "node_key": "final-summary",
+      "node_type": "summary",
+      "status": "PENDING",
+      "error_message": null
+    }
+  ],
+  "release_readiness": {
+    "status": "not_ready",
+    "safe_stop_reason": null
+  },
+  "scenario": "brownfield",
+  "node_statuses": {
+    "requirements": "SUCCEEDED",
+    "ambiguity-check": "SUCCEEDED",
+    "architecture": "SUCCEEDED",
+    "task-decomposition": "SUCCEEDED",
+    "risk-review": "SUCCEEDED",
+    "test-plan": "SUCCEEDED",
+    "implementation-plan": "SUCCEEDED",
+    "plan-sync": "SUCCEEDED",
+    "implementation-approval": "SUCCEEDED",
+    "implementation": "SUCCEEDED",
+    "test-execution": "SUCCEEDED",
+    "documentation": "SUCCEEDED",
+    "validation-sync": "SUCCEEDED",
+    "validation": "SUCCEEDED",
+    "release-approval": "WAITING_FOR_APPROVAL",
+    "final-summary": "PENDING"
+  }
+}

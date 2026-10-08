@@ -1,133 +1,133 @@
-# Scenario Guide
+# Scenario Runs
 
-## Running scenarios
+## Run behavior
 
-Run a scenario directly from the project root:
+Run a named scenario from the repository root:
 
 ```powershell
 python scripts/run_scenario.py greenfield
 python scripts/run_scenario.py brownfield
+python scripts/run_scenario.py brownfield --inject-failure
 python scripts/run_scenario.py ambiguous
 ```
 
-Or use the HTTP API:
+The runner writes the most recent output to `docs/scenario-runs/{name}-latest.json`. The named
+evidence files below preserve specific runs. The planner is deterministic and keyword-based. The
+saved runs used deterministic requirements analysis; no live LLM requirements call is represented.
 
-```text
-GET  /api/v1/scenarios
-POST /api/v1/scenarios/{name}/run
-```
+The validation node runs real `python -m pytest` using `PYTEST_GATE_TARGETS`, defaulting to
+`tests/test_shortener_api.py`. Brownfield first runs a separate patch test command against
+`tests/test_shortener_api.py` and `tests/test_shortener_destination_security.py`.
 
-Each run saves its review artifact under `docs/scenario-runs/`. The planner is deterministic and keyword-based, and the saved scenario artifacts record `execution.source` as `deterministic`; the optional LLM requirements path was not exercised in those runs.
+## Greenfield: baseline design and validation
 
-Validation for the workflow uses real `pytest` via `PYTEST_GATE_TARGETS`. The default target is `tests/test_shortener_api.py`, and the setting may be overridden with a comma-separated list of targets.
+This scenario is a **design-and-validation pass over the existing URL-shortener baseline**, not a
+claim of autonomous greenfield code generation.
 
-## 1. Greenfield: design and validation over the baseline
+**Requirement:** “Validate the initial URL shortener design with link creation, redirect,
+expiration, analytics, tests, and documentation.”
 
-### Requirement
+**Planned graph nodes:** `requirements`, `ambiguity-check`, `architecture`, `task-decomposition`,
+`risk-review`, `test-plan`, `implementation-plan`, `analytics-impact`, `plan-sync`,
+`implementation-approval`, `implementation`, `test-execution`, `documentation`, `validation-sync`,
+`validation`, `release-approval`, `final-summary`. `migration-review` is excluded because no
+database concern was detected.
 
-> Validate the initial URL shortener design with link creation, redirect, expiration, analytics, tests, and documentation.
+**Decisions:** Planner detected `api`, `analytics`, `testing`, and `docs`; requirements analysis
+used deterministic fallback; planning and review artifacts were produced by deterministic agents.
+The workflow is intentionally scoped to reviewing the pre-existing shortener baseline.
 
-### Scope label
+**Approval points:** The saved run is pending at `implementation-approval`. Its workflow node is
+typed as `planning`, but it is the explicit gate before high-impact implementation. No approval is
+pending for ordinary design artifacts. Release approval follows later, after validation evidence.
 
-This is honestly labeled as a **design-and-validation pass over the existing Phase 2 URL-shortener baseline**. The URL shortener was already implemented before the orchestration work, so this scenario does not claim autonomous greenfield code generation.
+**Validation evidence:** None yet. The run stops before implementation and before the configured
+pytest gate.
 
-### Graph
+**Outcome:** `WAITING_FOR_APPROVAL`; requirements, design, and planning nodes succeeded. See
+[greenfield-planner-approval.json](scenario-runs/greenfield-planner-approval.json).
 
-```text
-requirements
-   |\
-   | \-> test-plan
-   v
-architecture --------> validation
-```
+## Brownfield: destination-host patch succeeds
 
-### Expected behavior
+**Requirement:** “Reject link destinations that point to localhost or private network addresses so
+the shortener cannot be used to probe internal hosts, without changing existing API response
+shapes.”
 
-- Requirements and test planning complete.
-- Architecture includes API/database impact and pauses at `WAITING_FOR_APPROVAL`.
-- A reviewer can inspect the graph, artifacts, approval request, timeline, and final summary endpoint before allowing progress.
+**Planned graph nodes:** `requirements`, `ambiguity-check`, `architecture`, `task-decomposition`,
+`risk-review`, `test-plan`, `implementation-plan`, `plan-sync`, `implementation-approval`,
+`implementation`, `test-execution`, `documentation`, `validation-sync`, `validation`,
+`release-approval`, `final-summary`. `migration-review` and `analytics-impact` are excluded.
 
-### Evidence
+**Decisions:** The real impact scan identified shortener API/model/schema/service/validation files
+and `tests/test_shortener_api.py`. The implementation proposal is a fixed hand-written patch,
+applied only to a detached temporary Git worktree. It adds local/private destination rejection and
+security regression tests; it is not merged into the active repository.
 
-`docs/scenario-runs/greenfield-latest.json` records the requirement artifact, test-plan artifact, explicit scenario label, and pending approval state.
+**Approval points:** The scenario runner approves `implementation-approval` and the high-impact
+`implementation` gate as `scenario-reviewer`. After validation, `release-approval` remains pending.
+Approval is a workflow record with a reviewer string, not authentication.
 
-## 2. Brownfield: analytics reliability patch
+**Validation evidence:** The isolated patch run passed 14 tests with 0 failures using
+`tests/test_shortener_api.py` and `tests/test_shortener_destination_security.py`. The workflow's
+configured validation gate then passed 5 tests with 0 failures using
+`tests/test_shortener_api.py`. Both results are recorded in the artifact.
 
-### Requirement
+**Outcome:** `WAITING_FOR_APPROVAL` at release; `final-summary` remains pending. See
+[brownfield-success-release-pending.json](scenario-runs/brownfield-success-release-pending.json).
 
-> Improve redirect reliability so analytics failures never block a valid redirect, while preserving existing APIs and analytics behavior.
+## Brownfield: injected failure and rollback
 
-### Impacted areas
+This uses the same requirement and planned graph as the successful brownfield run.
 
-- `src/app/shortener/api.py`
-- `src/app/shortener/service.py`
-- `tests/test_shortener_api.py`
+**Decisions:** The same isolated hand-written patch is modified by the failure-injection option so
+it rejects every destination. The worktree test run detects this regression; the active checkout is
+not changed.
 
-### Controlled patch flow
+**Approval points:** The scenario runner automatically records approval for the two implementation
+gates. The run fails before the configured validation/release approval gate can be reached.
 
-1. The orchestrator produces architecture, implementation, test, and validation artifacts.
-2. The scenario creates an isolated temporary Git worktree from the Phase 2 baseline commit `9966dcc`.
-3. It intentionally adds a failing test and runs focused URL-shortener tests.
-4. It runs `git reset --hard HEAD` and `git clean -fd` inside the temporary worktree to demonstrate rollback.
-5. It applies a hand-written, reviewed patch that introduces `record_click_safely()` but does not merge it into the active repository.
-6. The patch catches analytics persistence failures, rolls back the failed database transaction, logs the failure, and preserves the redirect response.
-7. It adds a regression test proving that redirect remains HTTP 307 when analytics recording fails.
-8. It runs focused tests again and records the passing output and diff.
-9. The temporary worktree is removed, leaving the active development workspace untouched.
+**Validation evidence:** The isolated patch test command ran both brownfield targets and reported
+9 passed and 5 failed, including the public-destination regression. The workflow recorded
+`rollback_performed`, safe-stopped, and marked implementation plus downstream nodes
+`ROLLED_BACK`. The temporary worktree was removed and the active repository status was unchanged
+by the run.
 
-### Expected evidence
+**Outcome:** `SAFE_STOPPED`; release is not approved. See
+[brownfield-injected-failure-rollback.json](scenario-runs/brownfield-injected-failure-rollback.json).
 
-The `patch_execution_report` artifact includes:
+## Ambiguous requirement: clarification then continuation
 
-- Forced test failure output
-- `forced_failure_rolled_back: true`
-- Passing focused test output
-- `valid_patch_tests_passed: true`
-- Generated patch diff
-- Baseline commit and duration
+**Requirement:** “Make the URL shortener enterprise-ready and safer.”
 
-See `docs/scenario-runs/brownfield-latest.json`.
+**Planned graph nodes:** `requirements`, `ambiguity-check`, `architecture`, `task-decomposition`,
+`test-plan`, `implementation-plan`, `plan-sync`, `implementation-approval`, `implementation`,
+`test-execution`, `documentation`, `validation-sync`, `validation`, `release-approval`,
+`final-summary`. The planner detected `testing` and `docs`; it did not add high-impact API,
+database, or security branches for these words.
 
-## 3. Ambiguous: enterprise readiness
+**Decisions:** Deterministic requirements analysis identified underspecified policy choices and
+waited for clarification. The clarification specified authenticated link management, click-count
+retention without referrers/personal data, and unchanged redirect response shape. The requirements
+node then succeeded and execution continued.
 
-### Requirement
+**Approval points:** No implementation approval was needed for the detected planner concerns. The
+continued run waits at the mandatory `release-approval` gate after validation.
 
-> Make the URL shortener enterprise-ready and safer.
+**Validation evidence:** After clarification, the configured validation target
+`tests/test_shortener_api.py` passed 5 tests with 0 failures.
 
-### Detected ambiguity
+**Outcome:** `WAITING_FOR_INPUT` before clarification; `WAITING_FOR_APPROVAL` at release after
+continuation. See [ambiguous-clarified.json](scenario-runs/ambiguous-clarified.json) and the
+initial wait snapshot [ambiguous-latest.json](scenario-runs/ambiguous-latest.json).
 
-- Authentication and authorization requirements
-- Analytics data privacy and retention
-- Availability and traffic expectations
-- Abuse-prevention expectations
+## Review endpoints
 
-### Expected behavior
-
-1. Requirements analysis completes with structured ambiguity and clarification questions.
-2. The requirements node and workflow enter `WAITING_FOR_INPUT`.
-3. A reviewer sends a clarification through:
-
-```text
-POST /api/v1/workflows/{workflow_id}/clarifications
-```
-
-4. The requirements node returns to `READY` and runs again with the recorded clarification.
-5. If downstream architecture, API, database, or security work is high impact, the workflow subsequently pauses for human approval.
-
-### Evidence
-
-`docs/scenario-runs/ambiguous-latest.json` records detected ambiguity, questions, risks, and the input-wait state.
-
-## Reviewer workflow
-
-For each scenario, review these endpoints:
-
-| Endpoint | Review purpose |
+| Endpoint | Purpose |
 | --- | --- |
-| `/api/v1/workflows/{id}` | Current workflow and node state |
-| `/api/v1/workflows/{id}/graph` | Explicit dependency graph |
-| `/api/v1/workflows/{id}/timeline` | Chronological lifecycle events |
-| `/api/v1/workflows/{id}/audit` | Audit-grade transition history |
-| `/api/v1/workflows/{id}/approvals` | Pending and resolved human decisions |
-| `/api/v1/workflows/{id}/summary` | Final engineering summary |
-| `/api/v1/orchestration/metrics` | Aggregate reliability metrics |
+| `GET /api/v1/workflows/{id}` | Workflow and node state |
+| `GET /api/v1/workflows/{id}/graph` | Planned dependency graph |
+| `GET /api/v1/workflows/{id}/timeline` | Chronological lifecycle events |
+| `GET /api/v1/workflows/{id}/audit` | Audit event history |
+| `GET /api/v1/workflows/{id}/approvals` | Pending and resolved reviewer-string decisions |
+| `GET /api/v1/workflows/{id}/summary` | Workflow summary and stored validation evidence |
+| `GET /api/v1/orchestration/metrics` | Database-derived orchestration metrics |
