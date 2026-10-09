@@ -47,8 +47,8 @@ def normalize_scenario_output_paths(
         return value
 
     normalized = _TEMP_WORKTREE_PATH.sub("<temporary-worktree>", value)
-    normalized = _replace_root(normalized, repository_root, "")
     normalized = _replace_root(normalized, Path(sys.prefix), "<python>")
+    normalized = _replace_root(normalized, repository_root, "")
     normalized = normalized.replace("\\", "/")
     normalized = re.sub(r"(?<!:)/{2,}", "/", normalized)
     normalized = _UNC_PATH.sub("<absolute-path>", normalized)
